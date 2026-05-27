@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
-  // 1. State variables to keep track of user selections and inputs
+  const navigate = useNavigate();
+
+  // State variables for tracking inputs
   const [isRegistering, setIsRegistering] = useState(false);
-  const [role, setRole] = useState('student'); // Default role is student
-  
-  // Form fields
+  const [role, setRole] = useState('student');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [dept, setDept] = useState('');
@@ -13,16 +14,23 @@ function Login() {
   const [skills, setSkills] = useState('');
   const [cgpa, setCgpa] = useState('');
 
-  // 2. Function to handle when the user clicks "Submit"
+  // Form submission handling with routing
   const handleSubmit = (e) => {
-    e.preventDefault(); // Prevents the page from refreshing automatically
+    e.preventDefault(); 
     
-    if (isRegistering) {
-      console.log("Registering a new user:", { role, name, email, dept, phone, skills, cgpa });
-      alert(`Registration submitted for ${name}! (Check console log)`);
+    console.log("Form submitted. Role:", role, "Registering:", isRegistering);
+
+    if (role === 'student') {
+      // We pass an object containing the student's entered data!
+      navigate('/student', { 
+        state: { 
+          studentName: isRegistering ? name : "Demo Student", 
+          studentDept: isRegistering ? dept : "Computer Science", 
+          studentCgpa: isRegistering ? cgpa : "8.5" 
+        } 
+      });
     } else {
-      console.log("Logging in user:", { email, role });
-      alert(`Logging in with email: ${email} as ${role}!`);
+      navigate('/admin');
     }
   };
 
@@ -115,7 +123,7 @@ function Login() {
             </>
           )}
 
-          {/* Email Field (Always visible for both login and registration) */}
+          {/* Email Field (Always visible) */}
           <div style={styles.inputGroup}>
             <label style={styles.label}>Email Address</label>
             <input 
@@ -150,7 +158,7 @@ function Login() {
   );
 }
 
-// Simple embedded JavaScript styles to avoid needing external CSS files right now
+// Dark-themed Styles UI
 const styles = {
   container: {
     display: 'flex',
