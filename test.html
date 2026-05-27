@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Upload Report Test</title>
+  </head>
+  <body>
+    <h2>Upload Report</h2>
+
+    <form
+      action="http://127.0.0.1:5000/upload-report"
+      method="POST"
+      enctype="multipart/form-data"
+    >
+      <input type="text" name="student_id" placeholder="Student ID" />
+      <br /><br />
+
+      <input type="text" name="faculty_id" placeholder="Faculty ID" />
+      <br /><br />
+
+      <input type="file" name="file" />
+      <br /><br />
+
+      <button type="submit">Upload Report</button>
+    </form>
+  </body>
+</html>

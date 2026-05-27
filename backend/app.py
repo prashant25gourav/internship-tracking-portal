@@ -1,9 +1,26 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from db_config import cursor, db
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
+import os
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
+
+def allowed_file(filename):
+
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Upload configuration
+ALLOWED_EXTENSIONS = {"pdf", "doc", "docx"}
+app.config.setdefault('MAX_CONTENT_LENGTH', 10 * 1024 * 1024)  # 10 MB
+
+# uploads directory (sibling to backend folder)
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 def api_response(success=True, data=None, message=None, error=None, status=200, meta=None):
@@ -63,6 +80,73 @@ def get_internships():
 
     except Exception as e:
 
+        return api_response(success=False, error={"message": str(e)}, status=500)
+
+
+# API to list reports
+@app.route('/reports', methods=['GET'])
+def list_reports():
+    try:
+        query = """
+        SELECT
+            Report_ID,
+            Student_ID,
+            Faculty_ID,
+            File_Path,
+            Submission_Date
+        FROM REPORT
+        """
+        cursor.execute(query)
+        reports = cursor.fetchall()
+        return api_response(success=True, data=reports)
+    except Exception as e:
+        return api_response(success=False, error={"message": str(e)}, status=500)
+
+
+# API to get report metadata
+@app.route('/reports/<int:report_id>', methods=['GET'])
+def get_report(report_id):
+    try:
+        query = """
+        SELECT
+            Report_ID,
+            Student_ID,
+            Faculty_ID,
+            File_Path,
+            Submission_Date
+        FROM REPORT
+        WHERE Report_ID = %s
+        """
+        cursor.execute(query, (report_id,))
+        report = cursor.fetchone()
+        if not report:
+            return api_response(success=False, error={"message": "Report not found"}, status=404)
+        return api_response(success=True, data=report)
+    except Exception as e:
+        return api_response(success=False, error={"message": str(e)}, status=500)
+
+
+# API to download report file
+@app.route('/reports/<int:report_id>/download', methods=['GET'])
+def download_report(report_id):
+    try:
+        query = "SELECT File_Path FROM REPORT WHERE Report_ID = %s"
+        cursor.execute(query, (report_id,))
+        row = cursor.fetchone()
+        if not row:
+            return api_response(success=False, error={"message": "Report not found"}, status=404)
+        file_path = row.get('File_Path') if isinstance(row, dict) else row[0]
+        # Build absolute path and ensure it's inside uploads folder
+        file_abspath = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), file_path))
+        uploads_abs = os.path.abspath(app.config['UPLOAD_FOLDER'])
+        if not file_abspath.startswith(uploads_abs):
+            return api_response(success=False, error={"message": "Invalid file path"}, status=400)
+        if not os.path.exists(file_abspath):
+            return api_response(success=False, error={"message": "File not found on server"}, status=404)
+        directory = os.path.dirname(file_abspath)
+        filename = os.path.basename(file_abspath)
+        return send_from_directory(directory, filename, as_attachment=True)
+    except Exception as e:
         return api_response(success=False, error={"message": str(e)}, status=500)
 
 # API to fetch applications
@@ -523,6 +607,115 @@ def delete_internship(internship_id):
         db.rollback()
 
         return api_response(success=False, error={"message": "Cannot delete internship because applications exist for it"}, status=400)
+
+
+# API to upload report file
+@app.route('/upload-report', methods=['POST'])
+def upload_report():
+
+    try:
+
+        # Check file exists in request
+        if 'file' not in request.files:
+            return api_response(
+                success=False,
+                error={"message": "No file part in the request"},
+                status=400
+            )
+
+        file = request.files['file']
+
+        # Check file selected
+        if file.filename == '':
+            return api_response(
+                success=False,
+                error={"message": "No selected file"},
+                status=400
+            )
+
+        # Get form data
+        student_id = request.form.get('student_id')
+        faculty_id = request.form.get('faculty_id')
+
+        # Validate required fields
+        if not student_id:
+            return api_response(
+                success=False,
+                error={"message": "student_id is required"},
+                status=400
+            )
+
+        # Secure filename
+        filename = secure_filename(file.filename)
+
+        # Validate file type
+        if not allowed_file(filename):
+            return api_response(
+                success=False,
+                error={
+                    "message": f"Invalid file type. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
+                },
+                status=400
+            )
+
+        # Create unique filename
+        timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        stored_filename = f"{timestamp}_{filename}"
+
+        # Full file path
+        stored_path = os.path.join(
+            app.config['UPLOAD_FOLDER'],
+            stored_filename
+        )
+
+        # Save file
+        file.save(stored_path)
+
+        # Relative path for database
+        rel_path = os.path.join(
+            'uploads',
+            stored_filename
+        ).replace('\\', '/')
+
+        # Insert into REPORT table
+        query = """
+        INSERT INTO REPORT
+        (Student_ID, Faculty_ID, File_Path, Submission_Date)
+
+        VALUES (%s, %s, %s, CURDATE())
+        """
+
+        values = (
+            student_id,
+            faculty_id,
+            rel_path
+        )
+
+        cursor.execute(query, values)
+
+        db.commit()
+
+        report_id = cursor.lastrowid
+
+        return api_response(
+            success=True,
+            message="Report uploaded successfully",
+            data={
+                "report_id": report_id,
+                "file_path": rel_path
+            },
+            status=201
+        )
+
+    except Exception as e:
+
+        db.rollback()
+
+        return api_response(
+            success=False,
+            error={"message": str(e)},
+            status=500
+        )
     
 if __name__ == '__main__':
     app.run(debug=True)
