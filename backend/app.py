@@ -5,9 +5,34 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
+
+def api_response(success=True, data=None, message=None, error=None, status=200, meta=None):
+    """Return a standardized JSON response.
+
+    Format:
+    {
+      "success": bool,
+      "data": ... (optional),
+      "message": "..." (optional),
+      "error": {"message": "..."} (optional),
+      "meta": { ... } (optional)
+    }
+    """
+    payload = {"success": bool(success)}
+    if data is not None:
+        payload["data"] = data
+    if message:
+        payload["message"] = message
+    if error:
+        payload["error"] = error
+    if meta:
+        payload["meta"] = meta
+    return jsonify(payload), status
+
+
 @app.route('/')
 def home():
-    return "Internship Tracking Portal Backend Running"
+    return api_response(success=True, message="Backend running", data={"status": "running"})
 
 
 # API to fetch internships
@@ -34,13 +59,11 @@ def get_internships():
 
         internships = cursor.fetchall()
 
-        return jsonify(internships)
+        return api_response(success=True, data=internships)
 
     except Exception as e:
 
-        return jsonify({
-            "error": str(e)
-        }), 500
+        return api_response(success=False, error={"message": str(e)}, status=500)
 
 # API to fetch applications
 @app.route('/applications')
@@ -69,13 +92,11 @@ def get_applications():
 
         applications = cursor.fetchall()
 
-        return jsonify(applications)
+        return api_response(success=True, data=applications)
 
     except Exception as e:
 
-        return jsonify({
-            "error": str(e)
-        }), 500
+        return api_response(success=False, error={"message": str(e)}, status=500)
 
 # API to fetch applications of a specific student
 
@@ -103,13 +124,11 @@ def get_student_applications(student_id):
 
         applications = cursor.fetchall()
 
-        return jsonify(applications)
+        return api_response(success=True, data=applications)
 
     except Exception as e:
 
-        return jsonify({
-            "error": str(e)
-        }), 500
+        return api_response(success=False, error={"message": str(e)}, status=500)
     
 # API to fetch applications for a specific company
 
@@ -141,13 +160,11 @@ def get_company_applications(company_id):
 
         applications = cursor.fetchall()
 
-        return jsonify(applications)
+        return api_response(success=True, data=applications)
 
     except Exception as e:
 
-        return jsonify({
-            "error": str(e)
-        }), 500
+        return api_response(success=False, error={"message": str(e)}, status=500)
 
 # API to register a new student
 
@@ -160,9 +177,7 @@ def register_student():
 
         # Check if JSON data is received
         if not data:
-            return jsonify({
-                "error": "No data received"
-            }), 400
+            return api_response(success=False, error={"message": "No data received"}, status=400)
 
         name = data.get('name')
         dept = data.get('dept')
@@ -173,9 +188,7 @@ def register_student():
 
         # Check required fields
         if not name or not dept or not email:
-            return jsonify({
-                "error": "Missing required fields"
-            }), 400
+            return api_response(success=False, error={"message": "Missing required fields"}, status=400)
 
 
         # Check if student already exists
@@ -189,9 +202,7 @@ def register_student():
         existing_student = cursor.fetchone()
 
         if existing_student:
-            return jsonify({
-                "error": "Student already registered"
-            }), 400
+            return api_response(success=False, error={"message": "Student already registered"}, status=400)
 
 
         # Insert new student
@@ -215,18 +226,63 @@ def register_student():
 
         db.commit()
 
-        return jsonify({
-            "message": "Student registered successfully"
-        })
+        return api_response(success=True, message="Student registered successfully", status=201)
 
     except Exception as e:
 
         db.rollback()
 
-        return jsonify({
-            "error": str(e)
-        }), 500
+        return api_response(success=False, error={"message": str(e)}, status=500)
 
+# API to login student
+
+@app.route('/login-student', methods=['POST'])
+def login_student():
+
+    try:
+
+        data = request.get_json()
+
+        # Check if JSON data is received
+        if not data:
+            return api_response(success=False, error={"message": "No data received"}, status=400)
+
+        email = data.get('email')
+
+        # Check required field
+        if not email:
+            return api_response(success=False, error={"message": "Email is required"}, status=400)
+
+
+        query = """
+        SELECT
+            Student_ID,
+            Name,
+            Dept,
+            Email,
+            Phone,
+            Skills,
+            CGPA
+
+        FROM STUDENT
+
+        WHERE Email = %s
+        """
+
+        cursor.execute(query, (email,))
+
+        student = cursor.fetchone()
+
+        # Check if student exists
+        if not student:
+            return api_response(success=False, error={"message": "Student not found"}, status=404)
+
+        return api_response(success=True, data={"student": student}, message="Login successful")
+
+    except Exception as e:
+
+        return api_response(success=False, error={"message": str(e)}, status=500)
+    
  # API for apply internships
 @app.route('/apply', methods=['POST'])
 def apply_internship():
@@ -237,18 +293,14 @@ def apply_internship():
 
         # Check if JSON data is received
         if not data:
-            return jsonify({
-                "error": "No data received"
-            }), 400
+            return api_response(success=False, error={"message": "No data received"}, status=400)
 
         student_id = data.get('student_id')
         internship_id = data.get('internship_id')
 
         # Check required fields
         if not student_id or not internship_id:
-            return jsonify({
-                "error": "Missing required fields"
-            }), 400
+            return api_response(success=False, error={"message": "Missing required fields"}, status=400)
 
 
         # Check duplicate application
@@ -263,9 +315,7 @@ def apply_internship():
         existing_application = cursor.fetchone()
 
         if existing_application:
-            return jsonify({
-                "error": "Student already applied for this internship"
-            }), 400
+            return api_response(success=False, error={"message": "Student already applied for this internship"}, status=400)
 
 
         status = "Applied"
@@ -283,17 +333,13 @@ def apply_internship():
 
         db.commit()
 
-        return jsonify({
-            "message": "Application submitted successfully"
-        })
+        return api_response(success=True, message="Application submitted successfully", status=201)
 
     except Exception as e:
 
         db.rollback()
 
-        return jsonify({
-            "error": str(e)
-        }), 500
+        return api_response(success=False, error={"message": str(e)}, status=500)
 
 # API to update application status
 
@@ -305,17 +351,13 @@ def update_application_status():
         data = request.get_json()
 
         if not data:
-            return jsonify({
-                "error": "No data received"
-            }), 400
+            return api_response(success=False, error={"message": "No data received"}, status=400)
 
         app_id = data.get('app_id')
         status = data.get('status')
 
         if not app_id or not status:
-            return jsonify({
-                "error": "Missing required fields"
-            }), 400
+            return api_response(success=False, error={"message": "Missing required fields"}, status=400)
 
 
         query = """
@@ -330,17 +372,13 @@ def update_application_status():
 
         db.commit()
 
-        return jsonify({
-            "message": "Application status updated successfully"
-        })
+        return api_response(success=True, message="Application status updated successfully")
 
     except Exception as e:
 
         db.rollback()
 
-        return jsonify({
-            "error": str(e)
-        }), 500
+        return api_response(success=False, error={"message": str(e)}, status=500)
         
 # API to fetch all students
 
@@ -365,13 +403,11 @@ def get_students():
 
         students = cursor.fetchall()
 
-        return jsonify(students)
+        return api_response(success=True, data=students)
 
     except Exception as e:
 
-        return jsonify({
-            "error": str(e)
-        }), 500
+        return api_response(success=False, error={"message": str(e)}, status=500)
     
 
 # API to fetch all companies
@@ -395,12 +431,98 @@ def get_companies():
 
         companies = cursor.fetchall()
 
-        return jsonify(companies)
+        return api_response(success=True, data=companies)
 
     except Exception as e:
 
-        return jsonify({
-            "error": str(e)
-        }), 500
+        return api_response(success=False, error={"message": str(e)}, status=500)
+
+# API to add internship
+
+@app.route('/add-internship', methods=['POST'])
+def add_internship():
+
+    try:
+
+        data = request.get_json()
+
+        if not data:
+            return api_response(success=False, error={"message": "No data received"}, status=400)
+
+        company_id = data.get('company_id')
+        role = data.get('role')
+        duration = data.get('duration')
+        stipend = data.get('stipend')
+
+        if not company_id or not role:
+            return api_response(success=False, error={"message": "Missing required fields"}, status=400)
+
+
+        query = """
+        INSERT INTO INTERNSHIP
+        (Company_ID, Role, Duration, Stipend)
+
+        VALUES (%s, %s, %s, %s)
+        """
+
+        values = (
+            company_id,
+            role,
+            duration,
+            stipend
+        )
+
+
+        cursor.execute(query, values)
+
+        db.commit()
+
+        return api_response(success=True, message="Internship added successfully", status=201)
+
+    except Exception as e:
+
+        db.rollback()
+
+        return api_response(success=False, error={"message": str(e)}, status=500)
+    
+# API to delete internship
+
+@app.route('/delete-internship/<int:internship_id>', methods=['DELETE'])
+def delete_internship(internship_id):
+
+    try:
+
+        # Check if internship exists
+        check_query = """
+        SELECT * FROM INTERNSHIP
+        WHERE Internship_ID = %s
+        """
+
+        cursor.execute(check_query, (internship_id,))
+
+        internship = cursor.fetchone()
+
+        if not internship:
+            return api_response(success=False, error={"message": "Internship not found"}, status=404)
+
+
+        # Delete internship
+        query = """
+        DELETE FROM INTERNSHIP
+        WHERE Internship_ID = %s
+        """
+
+        cursor.execute(query, (internship_id,))
+
+        db.commit()
+
+        return api_response(success=True, message="Internship deleted successfully")
+
+    except Exception as e:
+
+        db.rollback()
+
+        return api_response(success=False, error={"message": "Cannot delete internship because applications exist for it"}, status=400)
+    
 if __name__ == '__main__':
     app.run(debug=True)
