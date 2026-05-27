@@ -32,7 +32,7 @@ function BrowseJobs() {
         <nav style={styles.navLinks}>
           <button onClick={() => navigate('/student')} style={styles.navButton}>Dashboard</button>
           <button style={{ ...styles.navButton, ...styles.activeNav }}>Browse Internships</button>
-          <button style={styles.navButton}>Upload Report</button>
+          <button onClick={() => navigate('/upload-report')} style={styles.navButton}>Upload Report</button>
         </nav>
         <button onClick={() => navigate('/')} style={styles.logoutButton}>Logout</button>
       </aside>
@@ -110,7 +110,7 @@ const styles = {
   stipendTag: { color: '#4ade80', fontWeight: 'bold', fontSize: '15px' },
   roleTitle: { margin: '0 0 8px 0', fontSize: '20px' },
   locationText: { margin: '0 0 15px 0', color: '#aaa', fontSize: '14px' },
-  skillsSection: { borderTop: '1px solid #2d2d2d', paddingVertical: '12px', paddingBottom: '20px', fontSize: '14px' },
+  skillsSection: { borderTop: '1px solid #2d2d2d', padding: '12px 0 20px 0', fontSize: '14px' },
   skillsText: { color: '#ccc', margin: '5px 0 0 0', lineHeight: '1.4' },
   applyButton: { backgroundColor: '#646cff', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', marginTop: 'auto' }
 };
