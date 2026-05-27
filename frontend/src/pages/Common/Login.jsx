@@ -29,7 +29,8 @@ function Login() {
           studentCgpa: isRegistering ? cgpa : "8.5" 
         } 
       });
-    } else {
+    } else if (role === 'faculty') {
+      // Explicitly matching the 'faculty' dropdown value
       navigate('/admin');
     }
   };

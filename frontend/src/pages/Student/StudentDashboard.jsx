@@ -5,27 +5,11 @@ function StudentDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if data was passed from login, otherwise use clean defaults
-  const incomingData = location.state || {};
-  const studentInfo = {
-    name: incomingData.studentName || "Demo Student",
-    dept: incomingData.studentDept || "Computer Science",
-    cgpa: incomingData.studentCgpa || "8.5"
-  };
-
-  const applications = [
-    { id: 1, company: "Google", role: "Software Engineer Intern", status: "Under Review", date: "May 20, 2026" },
-    { id: 2, company: "Stripe", role: "Backend Developer Intern", status: "Accepted", date: "May 15, 2026" },
-    { id: 3, company: "Microsoft", role: "Data Analyst Intern", status: "Rejected", date: "May 10, 2026" }
-  ];
-
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case 'Accepted': return { backgroundColor: '#1b4d3e', color: '#4ade80' };
-      case 'Under Review': return { backgroundColor: '#4d3d1b', color: '#facc15' };
-      case 'Rejected': return { backgroundColor: '#4d1b1b', color: '#f87171' };
-      default: return { backgroundColor: '#333', color: '#fff' };
-    }
+  // Fallback defaults if the user bypassed registration inputs
+  const studentData = location.state || {
+    studentName: "Demo Student",
+    studentDept: "Computer Science Department",
+    studentCgpa: "8.5"
   };
 
   return (
@@ -36,51 +20,44 @@ function StudentDashboard() {
         <nav style={styles.navLinks}>
           <button style={{ ...styles.navButton, ...styles.activeNav }}>Dashboard</button>
           
-          {/* We added the onClick trigger hook here! */}
-          <button 
-            onClick={() => navigate('/browse-jobs')} 
-            style={styles.navButton}
-          >
+          {/* FIXED: Restored Browse Internships menu line with correct route handler */}
+          <button onClick={() => navigate('/browse-jobs')} style={styles.navButton}>
             Browse Internships
           </button>
           
-          <button style={styles.navButton}>Upload Report</button>
+          <button onClick={() => navigate('/upload-report')} style={styles.navButton}>
+            Upload Report
+          </button>
         </nav>
         <button onClick={() => navigate('/')} style={styles.logoutButton}>Logout</button>
       </aside>
 
-      {/* Main Panel Content */}
+      {/* Main Stats Panel */}
       <main style={styles.mainContent}>
         <header style={styles.header}>
-          <div>
-            <h1>Welcome back, {studentInfo.name}!</h1>
-            <p style={{ color: '#aaa' }}>{studentInfo.dept} Department | CGPA: {studentInfo.cgpa}</p>
-          </div>
+          <h1 style={styles.mainHeading}>Welcome back, {studentData.studentName}!</h1>
+          <p style={{ color: '#aaa', margin: 0 }}>{studentData.studentDept} | CGPA: {studentData.studentCgpa}</p>
         </header>
 
-        {/* Dynamic Metric Cards */}
-        <section style={styles.statsGrid}>
+        {/* Quick Info Grid */}
+        <div style={styles.statsGrid}>
           <div style={styles.statCard}>
-            <h3>Total Applied</h3>
-            <p style={styles.statNumber}>{applications.length}</p>
+            <span style={styles.statLabel}>Total Applied</span>
+            <strong style={{ ...styles.statNumber, color: '#646cff' }}>3</strong>
           </div>
           <div style={styles.statCard}>
-            <h3>Under Review</h3>
-            <p style={{ ...styles.statNumber, color: '#facc15' }}>
-              {applications.filter(a => a.status === 'Under Review').length}
-            </p>
+            <span style={styles.statLabel}>Under Review</span>
+            <strong style={{ ...styles.statNumber, color: '#facc15' }}>1</strong>
           </div>
           <div style={styles.statCard}>
-            <h3>Offers Secured</h3>
-            <p style={{ ...styles.statNumber, color: '#4ade80' }}>
-              {applications.filter(a => a.status === 'Accepted').length}
-            </p>
+            <span style={styles.statLabel}>Offers Secured</span>
+            <strong style={{ ...styles.statNumber, color: '#4ade80' }}>1</strong>
           </div>
-        </section>
+        </div>
 
-        {/* Tracked Applications Table */}
-        <section style={styles.tableSection}>
-          <h2 style={{ marginBottom: '15px' }}>Your Applications</h2>
+        {/* Dynamic Status Tracking Table */}
+        <div style={styles.tableCard}>
+          <h3 style={{ margin: '0 0 20px 0', textAlign: 'center', color: '#fff' }}>Your Applications</h3>
           <table style={styles.table}>
             <thead>
               <tr style={styles.thRow}>
@@ -91,163 +68,57 @@ function StudentDashboard() {
               </tr>
             </thead>
             <tbody>
-              {applications.map((app) => (
-                <tr key={app.id} style={styles.tr}>
-                  <td style={styles.td}><strong>{app.company}</strong></td>
-                  <td style={styles.td}>{app.role}</td>
-                  <td style={styles.td}>{app.date}</td>
-                  <td style={styles.td}>
-                    <span style={{ ...styles.statusBadge, ...getStatusStyle(app.status) }}>
-                      {app.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              <tr style={styles.trRow}>
+                <td style={{ ...styles.td, fontWeight: 'bold' }}>Google</td>
+                <td style={styles.td}>Software Engineer Intern</td>
+                <td style={styles.td}>May 20, 2026</td>
+                <td style={styles.td}><span style={{ ...styles.badge, backgroundColor: '#3b3f10', color: '#facc15' }}>Under Review</span></td>
+              </tr>
+              <tr style={styles.trRow}>
+                <td style={{ ...styles.td, fontWeight: 'bold' }}>Stripe</td>
+                <td style={styles.td}>Backend Developer Intern</td>
+                <td style={styles.td}>May 15, 2026</td>
+                <td style={styles.td}><span style={{ ...styles.badge, backgroundColor: '#14532d', color: '#4ade80' }}>Accepted</span></td>
+              </tr>
+              <tr style={styles.trRow}>
+                <td style={{ ...styles.td, fontWeight: 'bold' }}>Microsoft</td>
+                <td style={styles.td}>Data Analyst Intern</td>
+                <td style={styles.td}>May 10, 2026</td>
+                <td style={styles.td}><span style={{ ...styles.badge, backgroundColor: '#7f1d1d', color: '#f87171' }}>Rejected</span></td>
+              </tr>
             </tbody>
           </table>
-        </section>
-
-        {/* AI Engine Placeholder Banner */}
-        <section style={styles.aiBanner}>
-          <h3>✨ Smart Internship Recommendations</h3>
-          <p style={{ color: '#ccc', margin: '5px 0 15px 0' }}>
-            Our background matching pipeline is ready. Connect your skills array to sort current openings instantly!
-          </p>
-          <button style={styles.aiButton}>Compute Optimal Matches</button>
-        </section>
+        </div>
       </main>
     </div>
   );
 }
 
 const styles = {
-  container: {
-    display: 'flex',
-    minHeight: '100vh',
-    backgroundColor: '#141414',
-    color: '#ffffff',
-    fontFamily: 'Arial, sans-serif',
-  },
-  sidebar: {
-    width: '240px',
-    backgroundColor: '#1f1f1f',
-    padding: '30px 20px',
-    display: 'flex',
-    flexDirection: 'column',
-    borderRight: '1px solid #333',
-  },
-  brand: {
-    color: '#646cff',
-    marginBottom: '40px',
-    fontSize: '24px',
-  },
-  navLinks: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    flexGrow: 1,
-  },
-  navButton: {
-    background: 'none',
-    border: 'none',
-    color: '#aaa',
-    padding: '12px',
-    textAlign: 'left',
-    fontSize: '16px',
-    cursor: 'pointer',
-    borderRadius: '6px',
-    transition: '0.2s',
-  },
-  activeNav: {
-    backgroundColor: '#646cff',
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  logoutButton: {
-    backgroundColor: '#333',
-    color: '#f87171',
-    border: '1px solid #444',
-    padding: '10px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-  },
-  mainContent: {
-    flexGrow: 1,
-    padding: '40px',
-    overflowY: 'auto',
-  },
-  header: {
-    marginBottom: '30px',
-    borderBottom: '1px solid #333',
-    paddingBottom: '20px',
-  },
-  statsGrid: {
-    display: 'flex',
-    gap: '20px',
-    marginBottom: '35px',
-  },
-  statCard: {
-    backgroundColor: '#1f1f1f',
-    padding: '20px',
-    borderRadius: '10px',
-    flex: 1,
-    border: '1px solid #2d2d2d',
-  },
-  statNumber: {
-    fontSize: '32px',
-    fontWeight: 'bold',
-    marginTop: '10px',
-    margin: 0,
-    color: '#646cff',
-  },
-  tableSection: {
-    backgroundColor: '#1f1f1f',
-    padding: '25px',
-    borderRadius: '10px',
-    border: '1px solid #2d2d2d',
-    marginBottom: '30px',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    textAlign: 'left',
-  },
-  thRow: {
-    borderBottom: '2px solid #333',
-  },
-  th: {
-    padding: '12px',
-    color: '#aaa',
-    fontSize: '14px',
-  },
-  tr: {
-    borderBottom: '1px solid #2d2d2d',
-  },
-  td: {
-    padding: '15px 12px',
-  },
-  statusBadge: {
-    padding: '5px 12px',
-    borderRadius: '12px',
-    fontSize: '12px',
-    fontWeight: 'bold',
-  },
-  aiBanner: {
-    background: 'linear-gradient(135deg, #1e1b4b 0%, #311042 100%)',
-    border: '1px solid #581c87',
-    padding: '25px',
-    borderRadius: '10px',
-  },
-  aiButton: {
-    backgroundColor: '#a855f7',
-    color: 'white',
-    border: 'none',
-    padding: '10px 20px',
-    borderRadius: '6px',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-  }
+  container: { display: 'flex', minHeight: '100vh', backgroundColor: '#141414', color: '#ffffff', fontFamily: 'Arial, sans-serif' },
+  sidebar: { width: '240px', backgroundColor: '#1f1f1f', padding: '30px 20px', display: 'flex', flexDirection: 'column', borderRight: '1px solid #333', flexShrink: 0 },
+  brand: { color: '#646cff', marginBottom: '40px', fontSize: '24px' },
+  navLinks: { display: 'flex', flexDirection: 'column', gap: '10px', flexGrow: 1 },
+  navButton: { background: 'none', border: 'none', color: '#aaa', padding: '12px', textAlign: 'left', fontSize: '16px', cursor: 'pointer', borderRadius: '6px', width: '100%' },
+  activeNav: { backgroundColor: '#646cff', color: '#fff', fontWeight: 'bold' },
+  logoutButton: { backgroundColor: '#333', color: '#f87171', border: '1px solid #444', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' },
+  
+  mainContent: { flexGrow: 1, padding: '40px 30px', overflowY: 'auto', maxWidth: 'calc(100vw - 240px)' },
+  header: { marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '20px' },
+  mainHeading: { fontSize: '2.5rem', margin: '0 0 10px 0', fontWeight: 'bold' },
+  
+  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' },
+  statCard: { backgroundColor: '#1f1f1f', border: '1px solid #2d2d2d', padding: '25px', borderRadius: '12px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' },
+  statLabel: { fontSize: '15px', color: '#aaa', fontWeight: 'bold' },
+  statNumber: { fontSize: '2rem', fontWeight: 'bold' },
+  
+  tableCard: { backgroundColor: '#1f1f1f', border: '1px solid #2d2d2d', borderRadius: '12px', padding: '25px' },
+  table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left' },
+  thRow: { borderBottom: '2px solid #2d2d2d' },
+  th: { padding: '12px', color: '#aaa', fontSize: '14px', fontWeight: 'bold' },
+  trRow: { borderBottom: '1px solid #2d2d2d' },
+  td: { padding: '16px 12px', fontSize: '15px' },
+  badge: { padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }
 };
 
 export default StudentDashboard;
