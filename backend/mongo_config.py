@@ -43,4 +43,25 @@ def log_activity(
 
     result = activity_collection.insert_one(document)
 
-   
+
+def get_recent_activities(limit=10):
+    """Return the most recent activity documents (newest first)."""
+    try:
+        docs = list(activity_collection.find().sort("timestamp", -1).limit(int(limit)))
+        # Convert ObjectId and datetime to serializable forms
+        for d in docs:
+            d['id'] = str(d.pop('_id', ''))
+            if isinstance(d.get('timestamp'), datetime):
+                d['timestamp'] = d['timestamp'].isoformat() + 'Z'
+        return docs
+    except Exception:
+        return []
+
+
+def get_activity_count():
+    """Return total number of activity log documents."""
+    try:
+        return int(activity_collection.count_documents({}))
+    except Exception:
+        return 0
+

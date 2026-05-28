@@ -6,6 +6,7 @@ build/
 __pycache__/
 *.pyc
 venv/
+.venv/
 
 # Environment variables (IMPORTANT)
 .env
@@ -19,3 +20,5 @@ uploads/
 
 # Logs
 *.log
+
+test.html
