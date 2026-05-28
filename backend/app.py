@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from db_config import cursor, db
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+from mongo_config import log_activity
 import os
 from datetime import datetime
 
@@ -129,26 +130,102 @@ def get_report(report_id):
 # API to download report file
 @app.route('/reports/<int:report_id>/download', methods=['GET'])
 def download_report(report_id):
-    try:
-        query = "SELECT File_Path FROM REPORT WHERE Report_ID = %s"
-        cursor.execute(query, (report_id,))
-        row = cursor.fetchone()
-        if not row:
-            return api_response(success=False, error={"message": "Report not found"}, status=404)
-        file_path = row.get('File_Path') if isinstance(row, dict) else row[0]
-        # Build absolute path and ensure it's inside uploads folder
-        file_abspath = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), file_path))
-        uploads_abs = os.path.abspath(app.config['UPLOAD_FOLDER'])
-        if not file_abspath.startswith(uploads_abs):
-            return api_response(success=False, error={"message": "Invalid file path"}, status=400)
-        if not os.path.exists(file_abspath):
-            return api_response(success=False, error={"message": "File not found on server"}, status=404)
-        directory = os.path.dirname(file_abspath)
-        filename = os.path.basename(file_abspath)
-        return send_from_directory(directory, filename, as_attachment=True)
-    except Exception as e:
-        return api_response(success=False, error={"message": str(e)}, status=500)
 
+    try:
+
+        # Fetch report file path
+        query = """
+        SELECT File_Path
+        FROM REPORT
+        WHERE Report_ID = %s
+        """
+
+        cursor.execute(query, (report_id,))
+
+        row = cursor.fetchone()
+
+        # Check report exists
+        if not row:
+            return api_response(
+                success=False,
+                error={"message": "Report not found"},
+                status=404
+            )
+
+        # Handle dict or tuple cursor result
+        file_path = (
+            row.get('File_Path')
+            if isinstance(row, dict)
+            else row[0]
+        )
+
+        # Build absolute file path
+        file_abspath = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.dirname(__file__)),
+                file_path
+            )
+        )
+
+        # Uploads directory absolute path
+        uploads_abs = os.path.abspath(
+            app.config['UPLOAD_FOLDER']
+        )
+
+        # Security check
+        if not file_abspath.startswith(uploads_abs):
+            return api_response(
+                success=False,
+                error={"message": "Invalid file path"},
+                status=400
+            )
+
+        # Check file exists on server
+        if not os.path.exists(file_abspath):
+            return api_response(
+                success=False,
+                error={"message": "File not found on server"},
+                status=404
+            )
+
+        # Extract directory and filename
+        directory = os.path.dirname(file_abspath)
+
+        filename = os.path.basename(file_abspath)
+
+        # Log download activity in MongoDB
+        log_activity(
+            student_id="system",
+
+            activity_type="download_report",
+            description="Report downloaded from portal",
+
+            module="reports",
+            api=f"/reports/{report_id}/download",
+            method="GET",
+
+            extra_data={
+                "report_id": report_id,
+                "file_name": filename,
+                "file_path": file_path
+            }
+        )
+
+        # Send file download response
+        return send_from_directory(
+            directory,
+            filename,
+            as_attachment=True
+        )
+
+    except Exception as e:
+
+        return api_response(
+            success=False,
+            error={"message": str(e)},
+            status=500
+        )
+    
 # API to fetch applications
 @app.route('/applications')
 def get_applications():
@@ -329,14 +406,21 @@ def login_student():
 
         # Check if JSON data is received
         if not data:
-            return api_response(success=False, error={"message": "No data received"}, status=400)
+            return api_response(
+                success=False,
+                error={"message": "No data received"},
+                status=400
+            )
 
         email = data.get('email')
 
         # Check required field
         if not email:
-            return api_response(success=False, error={"message": "Email is required"}, status=400)
-
+            return api_response(
+                success=False,
+                error={"message": "Email is required"},
+                status=400
+            )
 
         query = """
         SELECT
@@ -359,13 +443,42 @@ def login_student():
 
         # Check if student exists
         if not student:
-            return api_response(success=False, error={"message": "Student not found"}, status=404)
+            return api_response(
+                success=False,
+                error={"message": "Student not found"},
+                status=404
+            )
 
-        return api_response(success=True, data={"student": student}, message="Login successful")
+        # Log login activity in MongoDB
+        log_activity(
+            student_id=student['Student_ID'],
+
+            activity_type="login",
+            description="Student logged into the portal",
+
+            module="authentication",
+            api="/login-student",
+            method="POST",
+
+            extra_data={
+                "email": student['Email'],
+                "department": student['Dept']
+            }
+        )
+
+        return api_response(
+            success=True,
+            data={"student": student},
+            message="Login successful"
+        )
 
     except Exception as e:
 
-        return api_response(success=False, error={"message": str(e)}, status=500)
+        return api_response(
+            success=False,
+            error={"message": str(e)},
+            status=500
+        )
     
  # API for apply internships
 @app.route('/apply', methods=['POST'])
@@ -416,9 +529,26 @@ def apply_internship():
         cursor.execute(query, values)
 
         db.commit()
+        log_activity(
+            student_id=student_id,
+            activity_type="apply_internship",
+            description="Student applied for internship",
 
-        return api_response(success=True, message="Application submitted successfully", status=201)
+            module="applications",
+            api="/apply",
+            method="POST",
 
+            extra_data={
+                "internship_id": internship_id,
+                "status": "Applied"
+            }
+        )
+
+        return api_response(
+            success=True,
+            message="Application submitted successfully",
+            status=201
+        )
     except Exception as e:
 
         db.rollback()
@@ -697,6 +827,25 @@ def upload_report():
 
         report_id = cursor.lastrowid
 
+        # Log upload activity in MongoDB
+        log_activity(
+            student_id=student_id,
+
+            activity_type="upload_report",
+            description="Student uploaded internship report",
+
+            module="reports",
+            api="/upload-report",
+            method="POST",
+
+            extra_data={
+                "report_id": report_id,
+                "file_path": rel_path,
+                "file_name": stored_filename,
+                "file_type": filename.rsplit('.', 1)[1].lower()
+            }
+        )
+
         return api_response(
             success=True,
             message="Report uploaded successfully",
@@ -716,6 +865,5 @@ def upload_report():
             error={"message": str(e)},
             status=500
         )
-    
 if __name__ == '__main__':
     app.run(debug=True)
