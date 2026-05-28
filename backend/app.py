@@ -2,8 +2,10 @@ from flask import Flask, jsonify, request, send_from_directory
 from db_config import cursor, db
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
-from mongo_config import log_activity
+from mongo_config import log_activity, get_recent_activities, get_activity_count
+from auth import create_token, admin_required
 import os
+from werkzeug.exceptions import RequestEntityTooLarge
 from datetime import datetime
 
 app = Flask(__name__)
@@ -16,7 +18,10 @@ def allowed_file(filename):
 
 # Upload configuration
 ALLOWED_EXTENSIONS = {"pdf", "doc", "docx"}
-app.config.setdefault('MAX_CONTENT_LENGTH', 10 * 1024 * 1024)  # 10 MB
+# Enforce maximum upload size at the request level. Setting the value
+# directly (not via setdefault) ensures Werkzeug will reject requests
+# whose Content-Length exceeds the limit and raise RequestEntityTooLarge.
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB
 
 # uploads directory (sibling to backend folder)
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
@@ -46,6 +51,14 @@ def api_response(success=True, data=None, message=None, error=None, status=200, 
     if meta:
         payload["meta"] = meta
     return jsonify(payload), status
+
+
+# Global handler for oversized request bodies (file uploads beyond MAX_CONTENT_LENGTH).
+# Werkzeug raises RequestEntityTooLarge when Content-Length exceeds the configured limit.
+@app.errorhandler(RequestEntityTooLarge)
+def handle_request_entity_too_large(error):
+    # Return standardized API response with HTTP 413 Payload Too Large
+    return api_response(success=False, error={"message": "File size exceeds 10MB limit"}, status=413)
 
 
 @app.route('/')
@@ -172,13 +185,14 @@ def download_report(report_id):
             app.config['UPLOAD_FOLDER']
         )
 
-        # Security check
-        if not file_abspath.startswith(uploads_abs):
-            return api_response(
-                success=False,
-                error={"message": "Invalid file path"},
-                status=400
-            )
+        # Security check: ensure the file is inside the uploads directory
+        try:
+            common = os.path.commonpath([uploads_abs, file_abspath])
+        except Exception:
+            return api_response(success=False, error={"message": "Invalid file path"}, status=400)
+
+        if common != uploads_abs:
+            return api_response(success=False, error={"message": "Invalid file path"}, status=400)
 
         # Check file exists on server
         if not os.path.exists(file_abspath):
@@ -621,6 +635,105 @@ def get_students():
 
     except Exception as e:
 
+        return api_response(success=False, error={"message": str(e)}, status=500)
+
+
+@app.route('/auth/token', methods=['POST'])
+def get_auth_token():
+    """Issue an admin JWT when the correct ADMIN_PASSWORD is provided in body.
+
+    Body: { "password": "..." }
+    """
+    try:
+        data = request.get_json() or {}
+        password = data.get('password')
+        if not password:
+            return api_response(success=False, error={"message": "Password required"}, status=400)
+
+        admin_password = os.getenv('ADMIN_PASSWORD')
+        if not admin_password:
+            return api_response(success=False, error={"message": "Server misconfigured: ADMIN_PASSWORD not set"}, status=500)
+
+        if password != admin_password:
+            return api_response(success=False, error={"message": "Invalid credentials"}, status=401)
+
+        token = create_token('admin')
+        return api_response(success=True, data={"token": token}, message="Token issued")
+
+    except Exception as e:
+        return api_response(success=False, error={"message": str(e)}, status=500)
+
+
+@app.route('/analytics/summary', methods=['GET'])
+@admin_required
+def analytics_summary():
+    """Return key counts for dashboard analytics."""
+    try:
+        # Query totals from SQL
+        cursor.execute("SELECT COUNT(*) AS cnt FROM STUDENT")
+        row = cursor.fetchone()
+        total_students = int(row['cnt']) if isinstance(row, dict) and row.get('cnt') is not None else int(row[0])
+
+        cursor.execute("SELECT COUNT(*) AS cnt FROM COMPANY")
+        row = cursor.fetchone()
+        total_companies = int(row['cnt']) if isinstance(row, dict) and row.get('cnt') is not None else int(row[0])
+
+        cursor.execute("SELECT COUNT(*) AS cnt FROM INTERNSHIP")
+        row = cursor.fetchone()
+        total_internships = int(row['cnt']) if isinstance(row, dict) and row.get('cnt') is not None else int(row[0])
+
+        cursor.execute("SELECT COUNT(*) AS cnt FROM APPLICATION")
+        row = cursor.fetchone()
+        total_applications = int(row['cnt']) if isinstance(row, dict) and row.get('cnt') is not None else int(row[0])
+
+        cursor.execute("SELECT COUNT(*) AS cnt FROM REPORT")
+        row = cursor.fetchone()
+        total_reports = int(row['cnt']) if isinstance(row, dict) and row.get('cnt') is not None else int(row[0])
+
+        # Activity logs count from Mongo (feed is provided by /analytics/recent-activities)
+        total_activity_logs = get_activity_count()
+
+        return api_response(success=True, data={
+            "total_students": total_students,
+            "total_companies": total_companies,
+            "total_internships": total_internships,
+            "total_applications": total_applications,
+            "total_reports": total_reports,
+            "total_activity_logs": total_activity_logs
+        })
+
+    except Exception as e:
+        return api_response(success=False, error={"message": str(e)}, status=500)
+
+
+@app.route('/analytics/applications/status-breakdown', methods=['GET'])
+@admin_required
+def analytics_app_status_breakdown():
+    try:
+        query = "SELECT Status, COUNT(*) AS cnt FROM APPLICATION GROUP BY Status"
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        # Normalize rows to list of {status, count}
+        breakdown = []
+        for r in rows:
+            if isinstance(r, dict):
+                breakdown.append({"status": r.get('Status'), "count": int(r.get('cnt', 0))})
+            else:
+                breakdown.append({"status": r[0], "count": int(r[1])})
+
+        return api_response(success=True, data={"breakdown": breakdown})
+    except Exception as e:
+        return api_response(success=False, error={"message": str(e)}, status=500)
+
+
+@app.route('/analytics/recent-activities', methods=['GET'])
+@admin_required
+def analytics_recent_activities():
+    try:
+        limit = int(request.args.get('limit', 10))
+        activities = get_recent_activities(limit=limit)
+        return api_response(success=True, data={"activities": activities})
+    except Exception as e:
         return api_response(success=False, error={"message": str(e)}, status=500)
     
 
