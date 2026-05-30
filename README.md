@@ -6,30 +6,30 @@ The Internship Tracking Portal is a full-stack web application designed to strea
 
 The platform enables students to:
 
-* register and login
-* browse internship opportunities
-* apply for internships
-* track application progress
-* upload internship reports
-* download submitted reports
+- register and login
+- browse internship opportunities
+- apply for internships
+- track application progress
+- upload internship reports
+- download submitted reports
 
 Faculty/Admins can:
 
-* monitor internship activities
-* manage student applications
-* review uploaded reports
-* access analytics dashboards
-* monitor platform activity logs
+- monitor internship activities
+- manage student applications
+- review uploaded reports
+- access analytics dashboards
+- monitor platform activity logs
 
 The project demonstrates:
 
-* RESTful API development
-* Hybrid database architecture
-* JWT-protected admin analytics
-* File upload & management
-* Activity tracking & analytics
-* Frontend-backend integration
-* Team collaboration using Git & GitHub
+- RESTful API development
+- Hybrid database architecture
+- JWT-protected admin analytics
+- File upload & management
+- Activity tracking & analytics
+- Frontend-backend integration
+- Team collaboration using Git & GitHub
 
 ---
 
@@ -37,19 +37,17 @@ The project demonstrates:
 
 The project uses a **Hybrid Database Architecture**:
 
-* **MySQL** handles structured transactional data such as:
+- **MySQL** handles structured transactional data such as:
+  - students
+  - internships
+  - applications
+  - reports
 
-  * students
-  * internships
-  * applications
-  * reports
-
-* **MongoDB** is used for semi-structured behavioral analytics and activity logging, including:
-
-  * student logins
-  * internship applications
-  * report uploads
-  * report downloads
+- **MongoDB** is used for semi-structured behavioral analytics and activity logging, including:
+  - student logins
+  - internship applications
+  - report uploads
+  - report downloads
 
 This architecture demonstrates **Polyglot Persistence**, where multiple databases are used based on their strengths.
 
@@ -59,28 +57,28 @@ This architecture demonstrates **Polyglot Persistence**, where multiple database
 
 ## Frontend
 
-* React.js
-* JavaScript
-* CSS
+- React.js
+- JavaScript
+- CSS
 
 ## Backend
 
-* Flask (Python)
-* Flask-CORS
-* PyJWT
+- Flask (Python)
+- Flask-CORS
+- PyJWT
 
 ## Databases
 
-* MySQL
-* MongoDB
+- MySQL
+- MongoDB
 
 ## Tools & Platforms
 
-* Git
-* GitHub
-* VS Code
-* Thunder Client
-* MongoDB Compass
+- Git
+- GitHub
+- VS Code
+- Thunder Client
+- MongoDB Compass
 
 ---
 
@@ -88,51 +86,51 @@ This architecture demonstrates **Polyglot Persistence**, where multiple database
 
 ## 👨‍🎓 Student Features
 
-* Student Registration
-* Student Login
-* Browse Available Internships
-* Apply for Internships
-* Track Application Status
-* Upload Internship Reports
-* Download Uploaded Reports
+- Student Registration
+- Student Login
+- Browse Available Internships
+- Apply for Internships
+- Track Application Status
+- Upload Internship Reports
+- Download Uploaded Reports
 
 ---
 
 ## 👨‍🏫 Faculty/Admin Features
 
-* Add Internship Opportunities
-* View Student Applications
-* Monitor Uploaded Reports
-* Access Analytics Dashboard
-* View Recent Activity Logs
-* Protected Analytics APIs using JWT Authentication
+- Add Internship Opportunities
+- View Student Applications
+- Monitor Uploaded Reports
+- Access Analytics Dashboard
+- View Recent Activity Logs
+- Protected Analytics APIs using JWT Authentication
 
 ---
 
 ## 📊 Analytics & Monitoring Features
 
-* Activity Tracking System
-* Login Analytics
-* Internship Application Analytics
-* Report Upload Analytics
-* Report Download Analytics
-* Recent Activity Feed
-* Dashboard Summary APIs
+- Activity Tracking System
+- Login Analytics
+- Internship Application Analytics
+- Report Upload Analytics
+- Report Download Analytics
+- Recent Activity Feed
+- Dashboard Summary APIs
 
 ---
 
 ## ⚙ System Features
 
-* RESTful API Architecture
-* Standardized API Responses
-* JWT-Protected Admin Routes
-* MongoDB Activity Logging
-* File Upload & Download System
-* Foreign Key Constraints
-* Input Validation & Error Handling
-* Environment Variable Configuration
-* Secure File Path Validation
-* Modular Backend Structure
+- RESTful API Architecture
+- Standardized API Responses
+- JWT-Protected Admin Routes
+- MongoDB Activity Logging
+- File Upload & Download System
+- Foreign Key Constraints
+- Input Validation & Error Handling
+- Environment Variable Configuration
+- Secure File Path Validation
+- Modular Backend Structure
 
 ---
 
@@ -144,7 +142,6 @@ internship-tracking-portal/
 ├── frontend/              # React frontend
 ├── backend/               # Flask backend APIs
 ├── database/              # SQL schema & sample data
-├── uploads/               # Uploaded reports/documents
 ├── docs/                  # PPT, diagrams, reports
 │
 ├── .env.example
@@ -155,18 +152,33 @@ internship-tracking-portal/
 
 ---
 
+## Initialize Database
+
+If you haven't imported the schema yet, the `database/schema.sql` file
+creates the `internship_portal` database and all tables/views/triggers.
+Import it using the MySQL CLI:
+
+```bash
+# This will prompt for your DB password; the script creates the DB named
+# `internship_portal` and runs the contained statements.
+mysql -u <DB_USER> -p < database/schema.sql
+```
+
+Note: the schema file uses `DELIMITER` for trigger creation; import via
+the MySQL CLI or a client that supports delimiter/trigger scripts.
+
 # 🔐 Authentication & Security
 
 The system implements lightweight JWT-based authentication for admin analytics routes.
 
 Security features include:
 
-* JWT-protected analytics APIs
-* File type validation
-* Upload size restrictions
-* Path traversal protection
-* Environment variable configuration
-* Structured error handling
+- JWT-protected analytics APIs
+- File type validation
+- Upload size restrictions
+- Path traversal protection
+- Environment variable configuration
+- Structured error handling
 
 ---
 
@@ -176,9 +188,9 @@ The backend provides analytics-focused APIs for dashboard integration.
 
 Example APIs:
 
-* `/analytics/summary`
-* `/analytics/recent-activities`
-* `/analytics/applications/status-breakdown`
+- `/analytics/summary`
+- `/analytics/recent-activities`
+- `/analytics/applications/status-breakdown`
 
 These APIs are protected using JWT authentication and are designed for frontend dashboard integration.
 
@@ -282,19 +294,42 @@ python backend/app.py
 
 # 👥 Team Members
 
-* Prashant Gourav
-* Mohan Murari Sharma
-* Bhavika Chandar
-* Shivangi Tiwari
+- Prashant Gourav
+- Mohan Murari Sharma
+- Bhavika Chandar
+- Shivangi Tiwari
 
 ---
 
 # 📌 Project Highlights
 
-* Hybrid MySQL + MongoDB Architecture
-* Event-Driven Activity Tracking
-* JWT-Protected Admin Analytics
-* Dashboard-Ready APIs
-* Scalable Analytics System
-* Structured + Semi-Structured Data Handling
-* Full-Stack Team Collaboration
+- Hybrid MySQL + MongoDB Architecture
+- Event-Driven Activity Tracking
+- JWT-Protected Admin Analytics
+- Dashboard-Ready APIs
+- Scalable Analytics System
+- Structured + Semi-Structured Data Handling
+- Full-Stack Team Collaboration
+
+---
+
+## Database Views & Triggers
+
+This project includes small database-level helpers to make reporting
+and validation easier and more robust:
+
+- **SQL View**: `student_application_view` — a read-only view that
+  joins `STUDENT`, `APPLICATION`, `INTERNSHIP`, and `COMPANY` to
+  provide a compact, dashboard-friendly result set (student name,
+  internship role, company name, status, apply date).
+
+- **Trigger**: `prevent_invalid_cgpa` — a `BEFORE INSERT` trigger on
+  the `STUDENT` table which rejects inserts where the `CGPA` is
+  outside the valid 0.00–10.00 range using `SIGNAL SQLSTATE '45000'`.
+
+Integrity is enforced using foreign keys, CHECK constraints where
+supported, and targeted triggers — MySQL does not fully support
+`CREATE ASSERTION`, so these mechanisms provide the necessary
+business-rule enforcement at the DB layer.
+
+See `database/schema.sql` for the exact SQL definitions and comments.

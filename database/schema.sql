@@ -61,3 +61,60 @@ CREATE TABLE REPORT (
     FOREIGN KEY (Faculty_ID)
     REFERENCES FACULTY(Faculty_ID)
 );
+
+-- ================================================================
+-- VIEW: student_application_view
+-- Purpose: Provide a readable, joined view that combines student,
+-- internship, company and application status information. Useful
+-- for reporting, admin dashboards, and quick queries without
+-- repeating JOIN logic in application code.
+-- Fields exposed:
+--   - Student_ID
+--   - Student_Name
+--   - Internship_Role
+--   - Company_Name
+--   - Application_Status
+--   - Apply_Date
+-- ================================================================
+CREATE OR REPLACE VIEW student_application_view AS
+SELECT
+    s.Student_ID,
+    s.Name AS Student_Name,
+    i.Role AS Internship_Role,
+    c.Company_Name AS Company_Name,
+    a.Status AS Application_Status,
+    a.Apply_Date
+FROM APPLICATION a
+JOIN STUDENT s ON a.Student_ID = s.Student_ID
+JOIN INTERNSHIP i ON a.Internship_ID = i.Internship_ID
+JOIN COMPANY c ON i.Company_ID = c.Company_ID;
+
+-- ================================================================
+-- TRIGGER: prevent_invalid_cgpa
+-- Purpose: Validate CGPA on student insertion. Rejects inserts
+-- where CGPA is outside the valid range (0.00 - 10.00). This
+-- provides a simple, centralized integrity check at the DB layer
+-- and complements application-side validation.
+-- Uses SIGNAL SQLSTATE '45000' to abort the insert with a
+-- readable error message.
+-- ================================================================
+DELIMITER $$
+CREATE TRIGGER prevent_invalid_cgpa
+BEFORE INSERT ON STUDENT
+FOR EACH ROW
+BEGIN
+    -- If CGPA provided and is outside allowed range, reject insert
+    IF NEW.CGPA IS NOT NULL AND (NEW.CGPA < 0 OR NEW.CGPA > 10) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid CGPA value';
+    END IF;
+END$$
+DELIMITER ;
+
+-- ================================================================
+-- Note on assertions/integrity
+-- MySQL does not fully support CREATE ASSERTION. Integrity is
+-- enforced using a combination of:
+--   - Foreign key constraints (referential integrity)
+--   - CHECK constraints where supported
+--   - Triggers for business-rule validation (like the above)
+-- ================================================================
