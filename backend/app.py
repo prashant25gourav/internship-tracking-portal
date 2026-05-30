@@ -273,6 +273,33 @@ def get_applications():
 
         return api_response(success=False, error={"message": str(e)}, status=500)
 
+
+# Lightweight API exposing the database VIEW `student_application_view`.
+# This is optional and intended for simple read-only access to the
+# joined application data for dashboards or admin UIs. It keeps the
+# backend behaviour unchanged and simply selects from the DB view.
+@app.route('/applications-view')
+def get_applications_view():
+    try:
+        query = """
+        SELECT
+            Student_ID,
+            Student_Name,
+            Internship_Role,
+            Company_Name,
+            Application_Status,
+            Apply_Date
+        FROM student_application_view
+        """
+
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        return api_response(success=True, data=rows)
+
+    except Exception as e:
+        return api_response(success=False, error={"message": str(e)}, status=500)
+
 # API to fetch applications of a specific student
 
 @app.route('/student-applications/<int:student_id>')
@@ -365,6 +392,17 @@ def register_student():
         if not name or not dept or not email:
             return api_response(success=False, error={"message": "Missing required fields"}, status=400)
 
+        # Validate CGPA if provided: ensure numeric and within 0.0 - 10.0
+        if cgpa is not None and cgpa != "":
+            try:
+                cgpa_val = float(cgpa)
+            except (ValueError, TypeError):
+                return api_response(success=False, error={"message": "CGPA must be a numeric value"}, status=400)
+            if cgpa_val < 0 or cgpa_val > 10:
+                return api_response(success=False, error={"message": "CGPA must be between 0 and 10"}, status=400)
+        else:
+            cgpa_val = None
+
 
         # Check if student already exists
         check_query = """
@@ -394,7 +432,7 @@ def register_student():
             email,
             phone,
             skills,
-            cgpa
+            cgpa_val
         )
 
         cursor.execute(query, values)
