@@ -518,9 +518,14 @@ def login_student():
             }
         )
 
+        # Issue a lightweight student JWT for frontend use (dev/demo).
+        # This token is intentionally simple (role claim only) — do not
+        # treat it as a full authentication system for production.
+        token = create_token('student')
+
         return api_response(
             success=True,
-            data={"student": student},
+            data={"student": student, "token": token},
             message="Login successful"
         )
 
@@ -1017,4 +1022,6 @@ def upload_report():
             status=500
         )
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Respect FLASK_DEBUG env var for demo/CI. Accept common truthy strings.
+    debug = os.getenv('FLASK_DEBUG', 'False').lower() in ('1', 'true', 'yes')
+    app.run(debug=debug)
