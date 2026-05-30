@@ -167,6 +167,16 @@ mysql -u <DB_USER> -p < database/schema.sql
 Note: the schema file uses `DELIMITER` for trigger creation; import via
 the MySQL CLI or a client that supports delimiter/trigger scripts.
 
+### Reset & Seed (quick)
+
+From the `database/` directory you can reset and re-seed the demo dataset using the MySQL CLI:
+
+```bash
+mysql -u <DB_USER> -p internship_portal < reset_db.sql
+```
+
+This script truncates tables (temporarily disables foreign key checks) and reloads `sample_data.sql`.
+
 # 🔐 Authentication & Security
 
 The system implements lightweight JWT-based authentication for admin analytics routes.
@@ -179,6 +189,12 @@ Security features include:
 - Path traversal protection
 - Environment variable configuration
 - Structured error handling
+
+Notes and dev hints:
+
+- `POST /auth/token` issues an admin JWT when `ADMIN_PASSWORD` matches the `.env` value.
+- `POST /login-student` returns a lightweight `token` (role: `student`) alongside student profile data for demo-frontends. This token is intentionally minimal — do not rely on it for production-grade auth without adding passwords and validation.
+- Ensure `AUTH_SECRET` and `ADMIN_PASSWORD` are set in `.env` and **do not commit** `.env` to the repository.
 
 ---
 
@@ -276,10 +292,23 @@ DB_USER=root
 DB_PASSWORD=your_password
 DB_NAME=internship_portal
 
-MONGO_URI=mongodb://localhost:27017/
+# MySQL
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=internship_portal
 
+# MongoDB (analytics)
+MONGO_URI=mongodb://localhost:27017/
+MONGO_DB_NAME=internship_portal
+MONGO_ACTIVITY_COLLECTION=activity_logs
+
+# Admin / JWT
 ADMIN_PASSWORD=admin123
 AUTH_SECRET=mysecretkey
+
+# Optional: control debug mode for local runs (True/False)
+FLASK_DEBUG=True
 ```
 
 ---
@@ -289,6 +318,8 @@ AUTH_SECRET=mysecretkey
 ```bash
 python backend/app.py
 ```
+
+Set `FLASK_DEBUG=False` in `.env` to run without Flask debug mode.
 
 ---
 

@@ -3,6 +3,12 @@ import jwt
 from functools import wraps
 from datetime import datetime, timedelta
 from flask import request, jsonify
+from dotenv import load_dotenv
+
+# Load environment variables from a .env file (if present). This keeps
+# secret configuration (AUTH_SECRET, ADMIN_PASSWORD, DB credentials)
+# out of source control and makes local development predictable.
+load_dotenv()
 
 # Secret used to sign JWTs. Override in production via environment.
 AUTH_SECRET = os.getenv('AUTH_SECRET', 'dev-change-me')
