@@ -5,12 +5,26 @@ function StudentDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Fallback defaults if the user bypassed registration inputs
-  const studentData = location.state || {
-    studentName: "Demo Student",
-    studentDept: "Computer Science Department",
-    studentCgpa: "8.5"
+  // ROUTING & CACHE INTEGRATION COMPONENT
+  const getStudentData = () => {
+    // 1. Try reading the high-speed route parameter state first
+    if (location.state) {
+      return location.state;
+    }
+    // 2. Look up memory variables if navigating back from inner child loops
+    const savedData = localStorage.getItem('activeStudent');
+    if (savedData) {
+      return JSON.parse(savedData);
+    }
+    // 3. Absolute structural safe fallback parameters
+    return {
+      studentName: "Anagha Sriva",
+      studentDept: "Computer Science (cy)",
+      studentCgpa: "9.6"
+    };
   };
+
+  const studentData = getStudentData();
 
   return (
     <div style={styles.container}>
@@ -19,12 +33,9 @@ function StudentDashboard() {
         <h2 style={styles.brand}>PortalIO</h2>
         <nav style={styles.navLinks}>
           <button style={{ ...styles.navButton, ...styles.activeNav }}>Dashboard</button>
-          
-          {/* FIXED: Restored Browse Internships menu line with correct route handler */}
           <button onClick={() => navigate('/browse-jobs')} style={styles.navButton}>
             Browse Internships
           </button>
-          
           <button onClick={() => navigate('/upload-report')} style={styles.navButton}>
             Upload Report
           </button>
@@ -34,9 +45,12 @@ function StudentDashboard() {
 
       {/* Main Stats Panel */}
       <main style={styles.mainContent}>
+        {/* FIXED BOX MODEL: Balanced padding and flex heights prevents crowding */}
         <header style={styles.header}>
           <h1 style={styles.mainHeading}>Welcome back, {studentData.studentName}!</h1>
-          <p style={{ color: '#aaa', margin: 0 }}>{studentData.studentDept} | CGPA: {studentData.studentCgpa}</p>
+          <p style={styles.subtitle}>
+            {studentData.studentDept} | CGPA: {studentData.studentCgpa}
+          </p>
         </header>
 
         {/* Quick Info Grid */}
@@ -104,8 +118,29 @@ const styles = {
   logoutButton: { backgroundColor: '#333', color: '#f87171', border: '1px solid #444', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' },
   
   mainContent: { flexGrow: 1, padding: '40px 30px', overflowY: 'auto', maxWidth: 'calc(100vw - 240px)' },
-  header: { marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '20px' },
-  mainHeading: { fontSize: '2.5rem', margin: '0 0 10px 0', fontWeight: 'bold' },
+  
+  // ADJUSTED MARGIN MATRIX: Eliminates overcrowding issues
+  header: { 
+    marginBottom: '35px', 
+    borderBottom: '1px solid #333', 
+    paddingBottom: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px' 
+  },
+  mainHeading: { 
+    fontSize: '2.8rem', 
+    margin: 0, 
+    fontWeight: 'bold',
+    letterSpacing: '-0.5px',
+    lineHeight: '1.2'
+  },
+  subtitle: {
+    color: '#aaa',
+    margin: 0,
+    fontSize: '16px',
+    letterSpacing: '0.5px'
+  },
   
   statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' },
   statCard: { backgroundColor: '#1f1f1f', border: '1px solid #2d2d2d', padding: '25px', borderRadius: '12px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' },
