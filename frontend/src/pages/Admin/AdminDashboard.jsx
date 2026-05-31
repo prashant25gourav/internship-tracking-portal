@@ -12,6 +12,14 @@ function AdminDashboard() {
     { uid: "STU023", name: "Rohan S.", dept: "Data Science", cgpa: "7.8", company: "NVIDIA (Embedded Intern)", status: "Flagged" }
   ];
 
+  // PRASHANT'S INNOVATIVE FEATURE: MongoDB Live Activity Log Feed
+  const recentActivities = [
+    { id: 1, time: "12:41 PM", user: "Anagha Sriva (STU081)", action: "Uploaded internship project report document", target: "ir_lasertag_v2.pdf", badgeColor: "#646cff" },
+    { id: 2, time: "11:30 AM", user: "Siddarth Kumar (STU042)", action: "Submitted new corporate application stream", target: "Nvidia (Hardware Engineer)", badgeColor: "#0ea5e9" },
+    { id: 3, time: "10:15 AM", user: "Trisha Roy (STU115)", action: "Logged into student placement portal session", target: "IP: 192.168.1.42", badgeColor: "#10b981" },
+    { id: 4, time: "09:04 AM", user: "System Monitor", action: "Flagged academic non-compliance criteria", target: "Rohan S. (Data Science)", badgeColor: "#ef4444" }
+  ];
+
   return (
     <div style={styles.container}>
       {/* Admin Sidebar Navigation */}
@@ -22,7 +30,6 @@ function AdminDashboard() {
         </div>
         
         <nav style={styles.navLinks}>
-          {/* UPDATED SIDEBAR NAV LINKS TO MATCH REPO REQUIREMENTS */}
           <button style={{ ...styles.navButton, ...styles.activeNav }}>Master Roster</button>
           <button onClick={() => navigate('/verify-applications')} style={styles.navButton}>Verify Applications</button>
           <button onClick={() => navigate('/review-reports')} style={styles.navButton}>Review Reports</button>
@@ -37,6 +44,28 @@ function AdminDashboard() {
           <h1 style={styles.mainHeading}>Departmental Verification Hub</h1>
           <p style={styles.subtitle}>Review student academic compliance logs, evaluate uploaded industrial project certificates, and manage portal parameters.</p>
         </header>
+
+        {/* ================= LIVE MONGODB ACTIVITY LOG BOOK MODULE ================= */}
+        <section style={styles.logCard}>
+          <div style={styles.logHeader}>
+            <h3 style={styles.logTitle}>📊 Live MongoDB Activity Log Book</h3>
+            <span style={styles.liveIndicator}><span style={styles.pulseDot}></span> Live Tracking Active</span>
+          </div>
+          <div style={styles.logStream}>
+            {recentActivities.map((log) => (
+              <div key={log.id} style={styles.logItem}>
+                <span style={styles.logTime}>{log.time}</span>
+                <span style={{ ...styles.logTypeBadge, backgroundColor: log.badgeColor }}></span>
+                <div style={styles.logTextContainer}>
+                  <strong style={styles.logUser}>{log.user}</strong>{' '}
+                  <span style={styles.logAction}>{log.action}</span>{' '}
+                  <code style={styles.logTarget}>[{log.target}]</code>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+        {/* =============================================================================== */}
 
         {/* Filter Bar */}
         <div style={styles.filterContainer}>
@@ -103,7 +132,23 @@ const styles = {
   header: { marginBottom: '35px', textAlign: 'center' },
   mainHeading: { fontSize: '2.5rem', margin: '0 0 15px 0', fontWeight: 'bold' },
   subtitle: { color: '#aaa', margin: 0, fontSize: '16px', maxWidth: '800px', margin: '0 auto', lineHeight: '1.5' },
+
+  logCard: { backgroundColor: '#1f1f1f', border: '1px solid #2d2d2d', borderRadius: '12px', padding: '20px', marginBottom: '30px' },
+  logHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #2d2d2d', paddingBottom: '12px' },
+  logTitle: { margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#fff' },
+  liveIndicator: { fontSize: '12px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold' },
+  pulseDot: { width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%', display: 'inline-block' },
+  logStream: { display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '180px', overflowY: 'auto', paddingRight: '5px' },
   
+  // FIXED ALIGNMENT HERE
+  logItem: { display: 'flex', alignItems: 'center', gap: '14px', fontSize: '14px', padding: '6px 0', width: '100%', boxSizing: 'border-box' },
+  logTime: { color: '#666', fontFamily: 'monospace', fontSize: '13px', width: '65px', flexShrink: 0, textAlign: 'left' },
+  logTypeBadge: { width: '6px', height: '16px', borderRadius: '3px', flexShrink: 0 },
+  logTextContainer: { color: '#ccc', lineHeight: '1.4', textAlign: 'left', flexGrow: 1 },
+  logUser: { color: '#fff' },
+  logAction: { color: '#aaa' },
+  logTarget: { color: '#646cff', backgroundColor: '#141414', padding: '2px 6px', borderRadius: '4px', fontSize: '12px', marginLeft: '5px', fontFamily: 'monospace', display: 'inline-block' },
+
   filterContainer: { marginBottom: '25px' },
   filterInput: { width: '100%', padding: '14px 20px', backgroundColor: '#1f1f1f', border: '1px solid #333', borderRadius: '8px', color: '#fff', fontSize: '14px', boxSizing: 'border-box' },
   
