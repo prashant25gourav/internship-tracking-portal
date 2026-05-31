@@ -6,22 +6,61 @@ function AdminDashboard() {
   const navigate = useNavigate();
 
   const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("adminToken");
-    if (!token) return;
-    setLoading(true);
-    api
-      .analyticsSummary(token)
-      .then((res) => setSummary(res.data))
-      .catch((err) => console.error("Analytics failed", err.message))
-      .finally(() => setLoading(false));
+    fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+
+      const token = localStorage.getItem("adminToken");
+
+      const summaryRes = await api.get("/analytics/summary", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setSummary(summaryRes.data);
+
+      try {
+        const activityRes = await api.get(
+          "/analytics/recent-activities",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const formatted =
+          activityRes.data?.map((item, index) => ({
+            id: index,
+            time: item.timestamp || "Now",
+            user: item.user || "System",
+            action: item.action || "performed action",
+            target: item.target || "portal",
+            badgeColor: "#646cff",
+          })) || [];
+
+        setRecentActivities(formatted);
+      } catch (err) {
+        console.log("Recent activity endpoint unavailable");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed loading admin analytics");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div style={styles.container}>
-      {/* Admin Sidebar Navigation */}
       <aside style={styles.sidebar}>
         <div
           style={{
@@ -36,16 +75,19 @@ function AdminDashboard() {
         </div>
 
         <nav style={styles.navLinks}>
-          {/* UPDATED SIDEBAR NAV LINKS TO MATCH REPO REQUIREMENTS */}
-          <button style={{ ...styles.navButton, ...styles.activeNav }}>
-            Master Roster
+          <button
+            style={{ ...styles.navButton, ...styles.activeNav }}
+          >
+            Dashboard
           </button>
+
           <button
             onClick={() => navigate("/verify-applications")}
             style={styles.navButton}
           >
             Verify Applications
           </button>
+
           <button
             onClick={() => navigate("/review-reports")}
             style={styles.navButton}
@@ -54,78 +96,127 @@ function AdminDashboard() {
           </button>
         </nav>
 
-        <button onClick={() => navigate("/")} style={styles.logoutButton}>
+        <button
+          onClick={() => {
+            localStorage.removeItem("adminToken");
+            navigate("/");
+          }}
+          style={styles.logoutButton}
+        >
           Logout
         </button>
       </aside>
 
-      {/* Main Panel Content */}
       <main style={styles.mainContent}>
         <header style={styles.header}>
-          <h1 style={styles.mainHeading}>Departmental Verification Hub</h1>
+          <h1 style={styles.mainHeading}>
+            Departmental Verification Hub
+          </h1>
+
           <p style={styles.subtitle}>
-            Review student academic compliance logs, evaluate uploaded
-            industrial project certificates, and manage portal parameters.
+            Review student internship activity, verify
+            applications, and monitor analytics.
           </p>
         </header>
 
-        {/* Filter Bar */}
-        <div style={styles.filterContainer}>
-          <input
-            type="text"
-            placeholder="🔍 Filter student roster by name, company registration, or unique UID key..."
-            style={styles.filterInput}
-            disabled
-          />
-        </div>
+        <section style={styles.logCard}>
+          <div style={styles.logHeader}>
+            <h3 style={styles.logTitle}>
+              📊 Live MongoDB Activity Log Book
+            </h3>
 
-        {/* Roster Table */}
+            <span style={styles.liveIndicator}>
+              <span style={styles.pulseDot}></span>
+              Live Tracking Active
+            </span>
+          </div>
+
+          <div style={styles.logStream}>
+            {recentActivities.length > 0 ? (
+              recentActivities.map((log) => (
+                <div key={log.id} style={styles.logItem}>
+                  <span style={styles.logTime}>
+                    {log.time}
+                  </span>
+
+                  <span
+                    style={{
+                      ...styles.logTypeBadge,
+                      backgroundColor: log.badgeColor,
+                    }}
+                  ></span>
+
+                  <div style={styles.logTextContainer}>
+                    <strong style={styles.logUser}>
+                      {log.user}
+                    </strong>{" "}
+                    <span style={styles.logAction}>
+                      {log.action}
+                    </span>{" "}
+                    <code style={styles.logTarget}>
+                      [{log.target}]
+                    </code>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p style={{ color: "#aaa" }}>
+                No recent activities.
+              </p>
+            )}
+          </div>
+        </section>
+
         <div style={styles.tableCard}>
           <table style={styles.table}>
             <thead>
               <tr style={styles.thRow}>
-                <th style={styles.th}>Student UID</th>
-                <th style={styles.th}>Full Name</th>
-                <th style={styles.th}>Department</th>
-                <th style={styles.th}>CGPA</th>
-                <th style={styles.th}>Registered Company</th>
-                <th style={styles.th}>Verification Status</th>
+                <th style={styles.th}>Metric</th>
+                <th style={styles.th}>Value</th>
               </tr>
             </thead>
+
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: 20, color: "#aaa" }}>
-                    Loading summary...
+                  <td colSpan={2} style={styles.td}>
+                    Loading analytics...
                   </td>
                 </tr>
               ) : summary ? (
-                <tr style={styles.trRow}>
-                  <td
-                    style={{
-                      ...styles.td,
-                      color: "#646cff",
-                      fontFamily: "monospace",
-                    }}
-                  >
-                    --
-                  </td>
-                  <td style={{ ...styles.td, fontWeight: "bold" }}>
-                    Total Students
-                  </td>
-                  <td style={styles.td}>{summary.total_students}</td>
-                  <td style={styles.td}>{summary.total_companies}</td>
-                  <td style={styles.td}>{summary.total_internships}</td>
-                  <td style={styles.td}>
-                    <span style={styles.badge}>
-                      {summary.total_applications} apps
-                    </span>
-                  </td>
-                </tr>
+                <>
+                  <tr style={styles.trRow}>
+                    <td style={styles.td}>Total Students</td>
+                    <td style={styles.td}>
+                      {summary.total_students || 0}
+                    </td>
+                  </tr>
+
+                  <tr style={styles.trRow}>
+                    <td style={styles.td}>Total Companies</td>
+                    <td style={styles.td}>
+                      {summary.total_companies || 0}
+                    </td>
+                  </tr>
+
+                  <tr style={styles.trRow}>
+                    <td style={styles.td}>Total Internships</td>
+                    <td style={styles.td}>
+                      {summary.total_internships || 0}
+                    </td>
+                  </tr>
+
+                  <tr style={styles.trRow}>
+                    <td style={styles.td}>Applications</td>
+                    <td style={styles.td}>
+                      {summary.total_applications || 0}
+                    </td>
+                  </tr>
+                </>
               ) : (
                 <tr>
-                  <td colSpan={6} style={{ padding: 20, color: "#aaa" }}>
-                    No analytics available (login as admin).
+                  <td colSpan={2} style={styles.td}>
+                    No analytics available.
                   </td>
                 </tr>
               )}
@@ -145,6 +236,7 @@ const styles = {
     color: "#ffffff",
     fontFamily: "Arial, sans-serif",
   },
+
   sidebar: {
     width: "240px",
     backgroundColor: "#1f1f1f",
@@ -154,7 +246,13 @@ const styles = {
     borderRight: "1px solid #333",
     flexShrink: 0,
   },
-  brand: { color: "#646cff", margin: 0, fontSize: "24px" },
+
+  brand: {
+    color: "#646cff",
+    margin: 0,
+    fontSize: "24px",
+  },
+
   facultyBadge: {
     backgroundColor: "#facc15",
     color: "#141414",
@@ -163,12 +261,14 @@ const styles = {
     fontSize: "12px",
     fontWeight: "bold",
   },
+
   navLinks: {
     display: "flex",
     flexDirection: "column",
     gap: "10px",
     flexGrow: 1,
   },
+
   navButton: {
     background: "none",
     border: "none",
@@ -179,9 +279,14 @@ const styles = {
     cursor: "pointer",
     borderRadius: "6px",
     width: "100%",
-    transition: "all 0.2s",
   },
-  activeNav: { backgroundColor: "#646cff", color: "#fff", fontWeight: "bold" },
+
+  activeNav: {
+    backgroundColor: "#646cff",
+    color: "#fff",
+    fontWeight: "bold",
+  },
+
   logoutButton: {
     backgroundColor: "#333",
     color: "#f87171",
@@ -193,28 +298,25 @@ const styles = {
     marginTop: "auto",
   },
 
-  mainContent: { flexGrow: 1, padding: "40px 30px", overflowY: "auto" },
-  header: { marginBottom: "35px", textAlign: "center" },
-  mainHeading: { fontSize: "2.5rem", margin: "0 0 15px 0", fontWeight: "bold" },
-  subtitle: {
-    color: "#aaa",
-    margin: 0,
-    fontSize: "16px",
-    maxWidth: "800px",
-    margin: "0 auto",
-    lineHeight: "1.5",
+  mainContent: {
+    flexGrow: 1,
+    padding: "40px 30px",
+    overflowY: "auto",
   },
 
-  filterContainer: { marginBottom: "25px" },
-  filterInput: {
-    width: "100%",
-    padding: "14px 20px",
-    backgroundColor: "#1f1f1f",
-    border: "1px solid #333",
-    borderRadius: "8px",
-    color: "#fff",
-    fontSize: "14px",
-    boxSizing: "border-box",
+  header: {
+    marginBottom: "35px",
+    textAlign: "center",
+  },
+
+  mainHeading: {
+    fontSize: "2.5rem",
+    marginBottom: "15px",
+  },
+
+  subtitle: {
+    color: "#aaa",
+    fontSize: "16px",
   },
 
   tableCard: {
@@ -222,20 +324,104 @@ const styles = {
     border: "1px solid #2d2d2d",
     borderRadius: "12px",
     padding: "25px",
-    overflowX: "auto",
+    marginTop: "25px",
   },
-  table: { width: "100%", borderCollapse: "collapse", textAlign: "left" },
-  thRow: { borderBottom: "2px solid #2d2d2d" },
-  th: { padding: "12px", color: "#aaa", fontSize: "14px", fontWeight: "bold" },
-  trRow: { borderBottom: "1px solid #2d2d2d" },
-  td: { padding: "16px 12px", fontSize: "15px" },
-  badge: {
+
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+  },
+
+  thRow: {
+    borderBottom: "2px solid #2d2d2d",
+  },
+
+  th: {
+    padding: "12px",
+    color: "#aaa",
+    textAlign: "left",
+  },
+
+  trRow: {
+    borderBottom: "1px solid #2d2d2d",
+  },
+
+  td: {
+    padding: "16px 12px",
+  },
+
+  logCard: {
+    backgroundColor: "#1f1f1f",
+    border: "1px solid #2d2d2d",
+    borderRadius: "12px",
+    padding: "25px",
+    marginBottom: "25px",
+  },
+
+  logHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: "20px",
+  },
+
+  logTitle: {
+    margin: 0,
+  },
+
+  liveIndicator: {
+    color: "#4ade80",
+    fontSize: "14px",
+  },
+
+  pulseDot: {
     display: "inline-block",
-    padding: "6px 12px",
+    width: "8px",
+    height: "8px",
+    borderRadius: "50%",
+    backgroundColor: "#4ade80",
+    marginRight: "6px",
+  },
+
+  logStream: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+
+  logItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "10px",
+    backgroundColor: "#181818",
     borderRadius: "8px",
+  },
+
+  logTime: {
+    color: "#888",
     fontSize: "12px",
-    fontWeight: "bold",
-    textAlign: "center",
+  },
+
+  logTypeBadge: {
+    width: "10px",
+    height: "10px",
+    borderRadius: "50%",
+  },
+
+  logTextContainer: {
+    fontSize: "14px",
+  },
+
+  logUser: {
+    color: "#fff",
+  },
+
+  logAction: {
+    color: "#ccc",
+  },
+
+  logTarget: {
+    color: "#646cff",
   },
 };
 
