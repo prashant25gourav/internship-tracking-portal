@@ -38,7 +38,11 @@ function AdminDashboard() {
         });
 
         // Server returns { success, data: { activities: [...] } }
-        const activities = activityRes?.data?.data?.activities ?? activityRes?.data?.activities ?? activityRes?.data ?? [];
+        const activities =
+          activityRes?.data?.data?.activities ??
+          activityRes?.data?.activities ??
+          activityRes?.data ??
+          [];
 
         const formatted = (activities || []).map((item, index) => ({
           id: index,
