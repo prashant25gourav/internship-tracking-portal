@@ -28,14 +28,11 @@ function AdminDashboard() {
       setSummary(summaryRes.data);
 
       try {
-        const activityRes = await api.get(
-          "/analytics/recent-activities",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const activityRes = await api.get("/analytics/recent-activities", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         const formatted =
           activityRes.data?.map((item, index) => ({
@@ -75,9 +72,7 @@ function AdminDashboard() {
         </div>
 
         <nav style={styles.navLinks}>
-          <button
-            style={{ ...styles.navButton, ...styles.activeNav }}
-          >
+          <button style={{ ...styles.navButton, ...styles.activeNav }}>
             Dashboard
           </button>
 
@@ -109,21 +104,17 @@ function AdminDashboard() {
 
       <main style={styles.mainContent}>
         <header style={styles.header}>
-          <h1 style={styles.mainHeading}>
-            Departmental Verification Hub
-          </h1>
+          <h1 style={styles.mainHeading}>Departmental Verification Hub</h1>
 
           <p style={styles.subtitle}>
-            Review student internship activity, verify
-            applications, and monitor analytics.
+            Review student internship activity, verify applications, and monitor
+            analytics.
           </p>
         </header>
 
         <section style={styles.logCard}>
           <div style={styles.logHeader}>
-            <h3 style={styles.logTitle}>
-              📊 Live MongoDB Activity Log Book
-            </h3>
+            <h3 style={styles.logTitle}>📊 Live MongoDB Activity Log Book</h3>
 
             <span style={styles.liveIndicator}>
               <span style={styles.pulseDot}></span>
@@ -135,9 +126,7 @@ function AdminDashboard() {
             {recentActivities.length > 0 ? (
               recentActivities.map((log) => (
                 <div key={log.id} style={styles.logItem}>
-                  <span style={styles.logTime}>
-                    {log.time}
-                  </span>
+                  <span style={styles.logTime}>{log.time}</span>
 
                   <span
                     style={{
@@ -147,22 +136,14 @@ function AdminDashboard() {
                   ></span>
 
                   <div style={styles.logTextContainer}>
-                    <strong style={styles.logUser}>
-                      {log.user}
-                    </strong>{" "}
-                    <span style={styles.logAction}>
-                      {log.action}
-                    </span>{" "}
-                    <code style={styles.logTarget}>
-                      [{log.target}]
-                    </code>
+                    <strong style={styles.logUser}>{log.user}</strong>{" "}
+                    <span style={styles.logAction}>{log.action}</span>{" "}
+                    <code style={styles.logTarget}>[{log.target}]</code>
                   </div>
                 </div>
               ))
             ) : (
-              <p style={{ color: "#aaa" }}>
-                No recent activities.
-              </p>
+              <p style={{ color: "#aaa" }}>No recent activities.</p>
             )}
           </div>
         </section>
@@ -187,30 +168,22 @@ function AdminDashboard() {
                 <>
                   <tr style={styles.trRow}>
                     <td style={styles.td}>Total Students</td>
-                    <td style={styles.td}>
-                      {summary.total_students || 0}
-                    </td>
+                    <td style={styles.td}>{summary.total_students || 0}</td>
                   </tr>
 
                   <tr style={styles.trRow}>
                     <td style={styles.td}>Total Companies</td>
-                    <td style={styles.td}>
-                      {summary.total_companies || 0}
-                    </td>
+                    <td style={styles.td}>{summary.total_companies || 0}</td>
                   </tr>
 
                   <tr style={styles.trRow}>
                     <td style={styles.td}>Total Internships</td>
-                    <td style={styles.td}>
-                      {summary.total_internships || 0}
-                    </td>
+                    <td style={styles.td}>{summary.total_internships || 0}</td>
                   </tr>
 
                   <tr style={styles.trRow}>
                     <td style={styles.td}>Applications</td>
-                    <td style={styles.td}>
-                      {summary.total_applications || 0}
-                    </td>
+                    <td style={styles.td}>{summary.total_applications || 0}</td>
                   </tr>
                 </>
               ) : (
