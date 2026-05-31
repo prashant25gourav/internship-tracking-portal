@@ -1,0 +1,127 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+function VerifyApplications() {
+  const navigate = useNavigate();
+
+  // Mock data setup - The Integration team will swap this with: GET /applications
+  const [applications, setApplications] = useState([
+    { id: 1, name: "Siddarth Kumar", dept: "Information Science", company: "Nvidia", role: "Hardware Engineer Intern", status: "Pending" },
+    { id: 2, name: "Trisha Roy", dept: "Electronics", company: "Intel", role: "Embedded Systems Intern", status: "Pending" },
+    { id: 3, name: "Anagha Sriva", dept: "Computer Science (cy)", company: "AMD", role: "Firmware Dev Intern", status: "Pending" }
+  ]);
+
+  const handleStatusUpdate = (id, newStatus) => {
+    setApplications(prev => 
+      prev.map(app => app.id === id ? { ...app, status: newStatus } : app)
+    );
+    alert(`Application status updated to: ${newStatus}`);
+  };
+
+  return (
+    <div style={styles.container}>
+      {/* Admin Sidebar Navigation */}
+      <aside style={styles.sidebar}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '40px' }}>
+          <h2 style={styles.brand}>PortalIO</h2>
+          <span style={styles.facultyBadge}>Faculty</span>
+        </div>
+        <nav style={styles.navLinks}>
+          <button onClick={() => navigate('/admin')} style={styles.navButton}>Master Roster</button>
+          <button style={{ ...styles.navButton, ...styles.activeNav }}>Verify Applications</button>
+          <button onClick={() => navigate('/review-reports')} style={styles.navButton}>Review Reports</button>
+        </nav>
+        <button onClick={() => navigate('/')} style={styles.logoutButton}>Logout</button>
+      </aside>
+
+      {/* Main Panel Content */}
+      <main style={styles.mainContent}>
+        <header style={styles.header}>
+          <h1 style={styles.mainHeading}>Verify Student Applications</h1>
+          <p style={styles.subtitle}>Review and update structural corporate placement requests</p>
+        </header>
+
+        <div style={styles.tableCard}>
+          <table style={styles.table}>
+            <thead>
+              <tr style={styles.thRow}>
+                <th style={styles.th}>Student</th>
+                <th style={styles.th}>Department</th>
+                <th style={styles.th}>Company</th>
+                <th style={styles.th}>Role</th>
+                <th style={styles.th}>Current Status</th>
+                <th style={{ ...styles.th, textAlign: 'center' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {applications.map(app => (
+                <tr key={app.id} style={styles.trRow}>
+                  <td style={{ ...styles.td, fontWeight: 'bold' }}>{app.name}</td>
+                  <td style={styles.td}>{app.dept}</td>
+                  <td style={styles.td}>{app.company}</td>
+                  <td style={styles.td}>{app.role}</td>
+                  <td style={styles.td}>
+                    <span style={{ 
+                      ...styles.badge, 
+                      backgroundColor: app.status === 'Approved' ? '#14532d' : app.status === 'Rejected' ? '#7f1d1d' : '#3b3f10',
+                      color: app.status === 'Approved' ? '#4ade80' : app.status === 'Rejected' ? '#f87171' : '#facc15'
+                    }}>
+                      {app.status}
+                    </span>
+                  </td>
+                  <td style={styles.actionTd}>
+                    {app.status === 'Pending' ? (
+                      <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                        <button onClick={() => handleStatusUpdate(app.id, 'Approved')} style={styles.approveBtn}>Approve</button>
+                        <button onClick={() => handleStatusUpdate(app.id, 'Rejected')} style={styles.rejectBtn}>Reject</button>
+                      </div>
+                    ) : (
+                      <span style={{ color: '#666', fontSize: '13px', display: 'block', textAlign: 'center' }}>Action Finalized</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+const styles = {
+  container: { display: 'flex', minHeight: '100vh', backgroundColor: '#141414', color: '#ffffff', fontFamily: 'Arial, sans-serif' },
+  sidebar: { width: '240px', backgroundColor: '#1f1f1f', padding: '30px 20px', display: 'flex', flexDirection: 'column', borderRight: '1px solid #333', flexShrink: 0 },
+  brand: { color: '#646cff', margin: 0, fontSize: '24px' },
+  facultyBadge: { backgroundColor: '#facc15', color: '#141414', padding: '2px 6px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' },
+  navLinks: { display: 'flex', flexDirection: 'column', gap: '10px', flexGrow: 1 },
+  navButton: { background: 'none', border: 'none', color: '#aaa', padding: '12px', textAlign: 'left', fontSize: '16px', cursor: 'pointer', borderRadius: '6px', width: '100%' },
+  activeNav: { backgroundColor: '#646cff', color: '#fff', fontWeight: 'bold' },
+  logoutButton: { backgroundColor: '#333', color: '#f87171', border: '1px solid #444', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: 'auto' },
+  mainContent: { flexGrow: 1, padding: '40px 30px', overflowY: 'auto' },
+  
+  // FIXED SPACING CONTAINER
+  header: { 
+    marginBottom: '35px', 
+    borderBottom: '1px solid #333', 
+    paddingBottom: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px' 
+  },
+  mainHeading: { fontSize: '2.5rem', margin: 0, fontWeight: 'bold', lineHeight: '1.2' },
+  subtitle: { color: '#aaa', margin: 0, fontSize: '16px', lineHeight: '1.4' },
+  
+  tableCard: { backgroundColor: '#1f1f1f', border: '1px solid #2d2d2d', borderRadius: '12px', padding: '25px' },
+  table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left' },
+  thRow: { borderBottom: '2px solid #2d2d2d' },
+  th: { padding: '12px', color: '#aaa', fontSize: '14px', fontWeight: 'bold' },
+  trRow: { borderBottom: '1px solid #2d2d2d' },
+  td: { padding: '16px 12px', fontSize: '15px' },
+  actionTd: { padding: '16px 12px' },
+  badge: { padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' },
+  approveBtn: { backgroundColor: '#14532d', color: '#4ade80', border: '1px solid #22c55e', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
+  rejectBtn: { backgroundColor: '#7f1d1d', color: '#f87171', border: '1px solid #ef4444', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }
+};
+
+export default VerifyApplications;
