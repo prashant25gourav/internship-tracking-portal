@@ -11,4 +11,6 @@ db = mysql.connector.connect(
     database=os.getenv("DB_NAME")
 )
 
-cursor = db.cursor(dictionary=True)
+# Use a buffered cursor by default to avoid 'Commands out of sync' errors
+# when multiple execute/fetch cycles occur on the same connection.
+cursor = db.cursor(dictionary=True, buffered=True)
