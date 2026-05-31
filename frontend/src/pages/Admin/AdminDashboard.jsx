@@ -25,24 +25,29 @@ function AdminDashboard() {
         },
       });
 
-      setSummary(summaryRes.data);
+      // Extract server data from API wrapper: { success, data, message }
+      const summaryData = summaryRes?.data?.data ?? summaryRes?.data ?? null;
+      setSummary(summaryData);
 
       try {
         const activityRes = await api.get("/analytics/recent-activities", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          params: { limit: 10 },
         });
 
-        const formatted =
-          activityRes.data?.map((item, index) => ({
-            id: index,
-            time: item.timestamp || "Now",
-            user: item.user || "System",
-            action: item.action || "performed action",
-            target: item.target || "portal",
-            badgeColor: "#646cff",
-          })) || [];
+        // Server returns { success, data: { activities: [...] } }
+        const activities = activityRes?.data?.data?.activities ?? activityRes?.data?.activities ?? activityRes?.data ?? [];
+
+        const formatted = (activities || []).map((item, index) => ({
+          id: index,
+          time: item.timestamp || item.time || "Now",
+          user: item.user || item.student_id || "System",
+          action: item.description || item.action || "performed action",
+          target: item.module || item.target || "portal",
+          badgeColor: "#646cff",
+        }));
 
         setRecentActivities(formatted);
       } catch (err) {
