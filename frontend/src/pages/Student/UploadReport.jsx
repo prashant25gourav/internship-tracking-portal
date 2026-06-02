@@ -25,7 +25,6 @@ function UploadReport() {
     }
     fd.append("file", file);
     fd.append("student_id", student.Student_ID);
-    fd.append("faculty_id", "");
     fd.append("title", formData.title);
     fd.append("company", formData.company);
     fd.append("description", formData.description);
@@ -179,7 +178,7 @@ const styles = {
     flexGrow: 1,
   },
   navButton: {
-    background: "none",
+    backgroundColor: "transparent",
     border: "none",
     color: "#aaa",
     padding: "12px",

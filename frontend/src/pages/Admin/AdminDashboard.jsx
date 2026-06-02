@@ -19,23 +19,14 @@ function AdminDashboard() {
 
       const token = localStorage.getItem("adminToken");
 
-      const summaryRes = await api.get("/analytics/summary", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const summaryRes = await api.analyticsSummary(token);
 
       // Extract server data from API wrapper: { success, data, message }
       const summaryData = summaryRes?.data?.data ?? summaryRes?.data ?? null;
       setSummary(summaryData);
 
       try {
-        const activityRes = await api.get("/analytics/recent-activities", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: { limit: 10 },
-        });
+        const activityRes = await api.analyticsRecentActivities(token);
 
         // Server returns { success, data: { activities: [...] } }
         const activities =
@@ -84,19 +75,20 @@ function AdminDashboard() {
           <button style={{ ...styles.navButton, ...styles.activeNav }}>
             Dashboard
           </button>
-
-          <button
-            onClick={() => navigate("/verify-applications")}
-            style={styles.navButton}
-          >
+          <button onClick={() => navigate("/verify-applications")} style={styles.navButton}>
             Verify Applications
           </button>
-
-          <button
-            onClick={() => navigate("/review-reports")}
-            style={styles.navButton}
-          >
+          <button onClick={() => navigate("/review-reports")} style={styles.navButton}>
             Review Reports
+          </button>
+          <button onClick={() => navigate("/manage-internships")} style={styles.navButton}>
+            Manage Internships
+          </button>
+          <button onClick={() => navigate("/students-directory")} style={styles.navButton}>
+            Students Directory
+          </button>
+          <button onClick={() => navigate("/companies-directory")} style={styles.navButton}>
+            Companies Directory
           </button>
         </nav>
 
@@ -252,7 +244,7 @@ const styles = {
   },
 
   navButton: {
-    background: "none",
+    backgroundColor: "transparent",
     border: "none",
     color: "#aaa",
     padding: "12px",

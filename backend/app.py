@@ -922,6 +922,8 @@ def upload_report():
         # Get form data
         student_id = request.form.get('student_id')
         faculty_id = request.form.get('faculty_id')
+        if not faculty_id:
+            faculty_id = None
 
         # Validate required fields
         if not student_id:

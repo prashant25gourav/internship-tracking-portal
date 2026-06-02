@@ -231,7 +231,7 @@ const styles = {
     flexGrow: 1,
   },
   navButton: {
-    background: "none",
+    backgroundColor: "transparent",
     border: "none",
     color: "#aaa",
     padding: "12px",

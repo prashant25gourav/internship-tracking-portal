@@ -121,6 +121,36 @@ export async function analyticsAppStatus(token) {
   return handleResp(res);
 }
 
+export async function getStudents() {
+  const res = await fetch(`${BASE}/students`);
+  return handleResp(res);
+}
+
+export async function getCompanies() {
+  const res = await fetch(`${BASE}/companies`);
+  return handleResp(res);
+}
+
+export async function addInternship(payload, token) {
+  const res = await fetch(`${BASE}/add-internship`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(payload),
+  });
+  return handleResp(res);
+}
+
+export async function deleteInternship(id, token) {
+  const res = await fetch(`${BASE}/delete-internship/${id}`, {
+    method: "DELETE",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  return handleResp(res);
+}
+
 export default {
   registerStudent,
   loginStudent,
@@ -136,4 +166,8 @@ export default {
   analyticsSummary,
   analyticsRecentActivities,
   analyticsAppStatus,
+  getStudents,
+  getCompanies,
+  addInternship,
+  deleteInternship,
 };

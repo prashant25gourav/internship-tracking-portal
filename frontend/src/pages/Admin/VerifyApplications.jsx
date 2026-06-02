@@ -53,16 +53,22 @@ function VerifyApplications() {
         </div>
         <nav style={styles.navLinks}>
           <button onClick={() => navigate("/admin")} style={styles.navButton}>
-            Master Roster
+            Dashboard
           </button>
           <button style={{ ...styles.navButton, ...styles.activeNav }}>
             Verify Applications
           </button>
-          <button
-            onClick={() => navigate("/review-reports")}
-            style={styles.navButton}
-          >
+          <button onClick={() => navigate("/review-reports")} style={styles.navButton}>
             Review Reports
+          </button>
+          <button onClick={() => navigate("/manage-internships")} style={styles.navButton}>
+            Manage Internships
+          </button>
+          <button onClick={() => navigate("/students-directory")} style={styles.navButton}>
+            Students Directory
+          </button>
+          <button onClick={() => navigate("/companies-directory")} style={styles.navButton}>
+            Companies Directory
           </button>
         </nav>
         <button onClick={() => navigate("/")} style={styles.logoutButton}>
@@ -235,7 +241,7 @@ const styles = {
     flexGrow: 1,
   },
   navButton: {
-    background: "none",
+    backgroundColor: "transparent",
     border: "none",
     color: "#aaa",
     padding: "12px",
