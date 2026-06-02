@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+import gridfs
 from datetime import datetime
 import os
 from dotenv import load_dotenv
@@ -13,6 +14,7 @@ try:
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
     mongo_db = client[MONGO_DB_NAME]
     activity_collection = mongo_db[MONGO_ACTIVITY_COLLECTION]
+    fs = gridfs.GridFS(mongo_db)
     try:
         activity_collection.create_index([('timestamp', -1)])
     except Exception:
@@ -21,6 +23,19 @@ except Exception:
     client = None
     mongo_db = None
     activity_collection = None
+    fs = None
+
+def save_file_to_mongo(file, filename):
+    if fs is None:
+        raise Exception("MongoDB is not connected.")
+    file_id = fs.put(file, filename=filename)
+    return str(file_id)
+
+def get_file_from_mongo(file_id):
+    if fs is None:
+        raise Exception("MongoDB is not connected.")
+    from bson.objectid import ObjectId
+    return fs.get(ObjectId(file_id))
 
 
 def log_activity(

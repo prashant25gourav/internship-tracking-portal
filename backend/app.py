@@ -1,10 +1,11 @@
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, send_file
 from db_config import cursor, db
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
-from mongo_config import log_activity, get_recent_activities, get_activity_count
+from mongo_config import log_activity, get_recent_activities, get_activity_count, save_file_to_mongo, get_file_from_mongo
 from auth import create_token, admin_required
 import os
+import io
 from werkzeug.exceptions import RequestEntityTooLarge
 from datetime import datetime
 
@@ -172,7 +173,16 @@ def download_report(report_id):
             else row[0]
         )
 
-        # Build absolute file path
+        if file_path.startswith("mongodb://"):
+            file_id = file_path.replace("mongodb://", "")
+            grid_out = get_file_from_mongo(file_id)
+            return send_file(
+                io.BytesIO(grid_out.read()),
+                download_name=grid_out.filename,
+                as_attachment=True
+            )
+
+        # Build absolute file path (fallback for legacy files)
         file_abspath = os.path.abspath(
             os.path.join(
                 os.path.dirname(os.path.dirname(__file__)),
@@ -951,33 +961,21 @@ def upload_report():
         timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
         stored_filename = f"{timestamp}_{filename}"
 
-        # Full file path
-        stored_path = os.path.join(
-            app.config['UPLOAD_FOLDER'],
-            stored_filename
-        )
-
-        # Save file
-        file.save(stored_path)
-
-        # Relative path for database
-        rel_path = os.path.join(
-            'uploads',
-            stored_filename
-        ).replace('\\', '/')
+        # Save file to MongoDB GridFS instead of local filesystem
+        file_id = save_file_to_mongo(file, stored_filename)
+        rel_path = f"mongodb://{file_id}"
 
         # Insert into REPORT table
         query = """
         INSERT INTO REPORT
-        (Student_ID, Faculty_ID, Topic, File_Path, Submission_Date)
+        (Student_ID, Faculty_ID, File_Path, Submission_Date)
 
-        VALUES (%s, %s, %s, %s, CURDATE())
+        VALUES (%s, %s, %s, CURDATE())
         """
 
         values = (
             student_id,
             faculty_id,
-            title,
             rel_path
         )
 
