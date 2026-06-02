@@ -13,18 +13,19 @@ export default function Login() {
   const [name, setName] = useState("");
   const [dept, setDept] = useState("Computer Science");
   const [cgpa, setCgpa] = useState("");
-  const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setLoading(true);
+
     if (role === "student") {
-      setLoading(true);
-      const payload = { email };
+      const payload = { email, password };
       const doLogin = async () => {
         try {
           if (isRegistering) {
-            await api.registerStudent({ name, dept, email, cgpa });
+            await api.registerStudent({ name, dept, email, cgpa, password });
           }
           const res = await api.loginStudent(payload);
           const student = res.data.student;
@@ -48,18 +49,25 @@ export default function Login() {
       };
       doLogin();
     } else if (role === "faculty") {
-      setLoading(true);
-      api
-        .adminAuth(password)
-        .then((res) => {
+      const payload = { email, password };
+      const doLogin = async () => {
+        try {
+          if (isRegistering) {
+            await api.registerFaculty({ name, dept, email, password });
+          }
+          const res = await api.loginFaculty(payload);
+          const faculty = res.data.faculty;
           const token = res.data.token;
-          localStorage.setItem("adminToken", token);
+          localStorage.setItem("faculty", JSON.stringify(faculty));
+          if (token) localStorage.setItem("adminToken", token);
           navigate("/admin");
-        })
-        .catch((err) => {
+        } catch (err) {
           alert("Admin auth failed: " + err.message);
-        })
-        .finally(() => setLoading(false));
+        } finally {
+          setLoading(false);
+        }
+      };
+      doLogin();
     }
   };
 
@@ -144,7 +152,7 @@ export default function Login() {
               <p className="text-zinc-400 text-sm">Authenticate your session to continue</p>
             </div>
 
-            <div className="flex p-1 bg-zinc-900 rounded-lg mb-8 border border-zinc-800">
+            <div className="flex p-1 bg-zinc-900 rounded-lg mb-6 border border-zinc-800">
               <button
                 onClick={() => { setRole("student"); setIsRegistering(false); }}
                 className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
@@ -154,7 +162,7 @@ export default function Login() {
                 Student
               </button>
               <button
-                onClick={() => { setRole("faculty"); }}
+                onClick={() => { setRole("faculty"); setIsRegistering(false); }}
                 className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
                   role === "faculty" ? "bg-zinc-800 text-white shadow-lg shadow-black/50" : "text-zinc-400 hover:text-zinc-200"
                 }`}
@@ -163,25 +171,23 @@ export default function Login() {
               </button>
             </div>
 
+            <motion.div
+              key="auth-mode-toggle"
+              initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+              className="flex justify-center gap-6 border-b border-zinc-800/80 pb-4 mb-4"
+            >
+              <button type="button" onClick={() => setIsRegistering(false)} className={`text-sm font-bold transition-colors ${!isRegistering ? "text-cyan-400" : "text-zinc-500 hover:text-zinc-300"}`}>
+                Sign In
+              </button>
+              <button type="button" onClick={() => setIsRegistering(true)} className={`text-sm font-bold transition-colors ${isRegistering ? "text-cyan-400" : "text-zinc-500 hover:text-zinc-300"}`}>
+                Register
+              </button>
+            </motion.div>
+
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               <AnimatePresence mode="popLayout">
-                {role === "student" && (
-                  <motion.div
-                    key="student-mode-toggle"
-                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                    className="flex justify-center gap-6 border-b border-zinc-800/80 pb-4 mb-2"
-                  >
-                    <button type="button" onClick={() => setIsRegistering(false)} className={`text-sm font-bold transition-colors ${!isRegistering ? "text-cyan-400" : "text-zinc-500 hover:text-zinc-300"}`}>
-                      Sign In
-                    </button>
-                    <button type="button" onClick={() => setIsRegistering(true)} className={`text-sm font-bold transition-colors ${isRegistering ? "text-cyan-400" : "text-zinc-500 hover:text-zinc-300"}`}>
-                      Create Account
-                    </button>
-                  </motion.div>
-                )}
-
-                {role === "student" && isRegistering && (
-                  <motion.div key="student-register-fields" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="flex flex-col gap-5">
+                {isRegistering && (
+                  <motion.div key="register-fields" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="flex flex-col gap-5">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Full Legal Name</label>
                       <div className="relative">
@@ -198,35 +204,35 @@ export default function Login() {
                           <option value="Electronics">Electronics</option>
                         </select>
                       </div>
-                      <div className="space-y-2 flex-1">
-                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">CGPA</label>
-                        <input type="number" step="0.01" min="0" max="10" required placeholder="9.15" value={cgpa} onChange={(e) => setCgpa(e.target.value)} className="w-full bg-zinc-900/80 border border-zinc-700 rounded-lg py-2.5 px-4 text-sm focus:outline-none focus:border-cyan-500 transition-all text-white" />
-                      </div>
+                      {role === "student" && (
+                        <div className="space-y-2 flex-1">
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">CGPA</label>
+                          <input type="number" step="0.01" min="0" max="10" required placeholder="9.15" value={cgpa} onChange={(e) => setCgpa(e.target.value)} className="w-full bg-zinc-900/80 border border-zinc-700 rounded-lg py-2.5 px-4 text-sm focus:outline-none focus:border-cyan-500 transition-all text-white" />
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}
 
                 <motion.div key="email-field" layout className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">{role === "faculty" ? "Faculty ID / Email" : "College Email"}</label>
+                  <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">{role === "faculty" ? "Faculty Email" : "Student Email"}</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                     <input type="email" required placeholder="name@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-900/80 border border-zinc-700 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white" />
                   </div>
                 </motion.div>
 
-                {role === "faculty" && (
-                  <motion.div key="faculty-password" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Passcode</label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                      <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-zinc-900/80 border border-zinc-700 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white" />
-                    </div>
-                  </motion.div>
-                )}
+                <motion.div key="password-field" layout className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Passcode</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                    <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-zinc-900/80 border border-zinc-700 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white" />
+                  </div>
+                </motion.div>
               </AnimatePresence>
 
               <button type="submit" disabled={loading} className="mt-6 w-full flex items-center justify-center gap-2 bg-gradient-premium hover:opacity-90 text-white py-3 px-4 rounded-lg font-bold transition-all hover:scale-[1.02] shadow-[0_10px_20px_rgba(99,102,241,0.3)] disabled:opacity-50">
-                {loading ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <>{role === "faculty" ? "Access Dashboard" : isRegistering ? "Create Account" : "Sign In"} <ChevronRight className="w-5 h-5" /></>}
+                {loading ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <>{isRegistering ? "Register Account" : "Access Dashboard"} <ChevronRight className="w-5 h-5" /></>}
               </button>
             </form>
           </div>

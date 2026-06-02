@@ -31,6 +31,24 @@ export async function loginStudent(payload) {
   return handleResp(res);
 }
 
+export async function registerFaculty(payload) {
+  const res = await fetch(`${BASE}/register-faculty`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return handleResp(res);
+}
+
+export async function loginFaculty(payload) {
+  const res = await fetch(`${BASE}/login-faculty`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return handleResp(res);
+}
+
 export async function getInternships() {
   const res = await fetch(`${BASE}/internships`);
   return handleResp(res);
@@ -170,4 +188,6 @@ export default {
   getCompanies,
   addInternship,
   deleteInternship,
+  registerFaculty,
+  loginFaculty,
 };

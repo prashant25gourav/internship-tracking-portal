@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, send_from_directory, send_file
 from db_config import cursor, db
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 from mongo_config import log_activity, get_recent_activities, get_activity_count, save_file_to_mongo, get_file_from_mongo
 from auth import create_token, admin_required
 import os
@@ -397,9 +398,10 @@ def register_student():
         phone = data.get('phone')
         skills = data.get('skills')
         cgpa = data.get('cgpa')
+        password = data.get('password')
 
         # Check required fields
-        if not name or not dept or not email:
+        if not name or not dept or not email or not password:
             return api_response(success=False, error={"message": "Missing required fields"}, status=400)
 
         # Validate CGPA if provided: ensure numeric and within 0.0 - 10.0
@@ -427,13 +429,14 @@ def register_student():
         if existing_student:
             return api_response(success=False, error={"message": "Student already registered"}, status=400)
 
+        hashed_password = generate_password_hash(password)
 
         # Insert new student
         query = """
         INSERT INTO STUDENT
-        (Name, Dept, Email, Phone, Skills, CGPA)
+        (Name, Dept, Email, Phone, Skills, CGPA, Password)
 
-        VALUES (%s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
 
         values = (
@@ -442,7 +445,8 @@ def register_student():
             email,
             phone,
             skills,
-            cgpa_val
+            cgpa_val,
+            hashed_password
         )
 
         cursor.execute(query, values)
@@ -475,12 +479,13 @@ def login_student():
             )
 
         email = data.get('email')
+        password = data.get('password')
 
         # Check required field
-        if not email:
+        if not email or not password:
             return api_response(
                 success=False,
-                error={"message": "Email is required"},
+                error={"message": "Email and password are required"},
                 status=400
             )
 
@@ -492,7 +497,8 @@ def login_student():
             Email,
             Phone,
             Skills,
-            CGPA
+            CGPA,
+            Password
 
         FROM STUDENT
 
@@ -510,6 +516,18 @@ def login_student():
                 error={"message": "Student not found"},
                 status=404
             )
+
+        stored_password = student.get('Password')
+        if stored_password:
+            if not check_password_hash(stored_password, password):
+                return api_response(success=False, error={"message": "Invalid password"}, status=401)
+        else:
+            # Fallback for legacy students without passwords
+            if password != 'password':
+                return api_response(success=False, error={"message": "Legacy account: use 'password' to login"}, status=401)
+
+        # Remove password from response
+        student.pop('Password', None)
 
         # Log login activity in MongoDB
         log_activity(
@@ -693,10 +711,7 @@ def get_students():
 
 @app.route('/auth/token', methods=['POST'])
 def get_auth_token():
-    """Issue an admin JWT when the correct ADMIN_PASSWORD is provided in body.
-
-    Body: { "password": "..." }
-    """
+    """Fallback legacy admin token issuance."""
     try:
         data = request.get_json() or {}
         password = data.get('password')
@@ -712,6 +727,79 @@ def get_auth_token():
 
         token = create_token('admin')
         return api_response(success=True, data={"token": token}, message="Token issued")
+
+    except Exception as e:
+        return api_response(success=False, error={"message": str(e)}, status=500)
+
+
+@app.route('/register-faculty', methods=['POST'])
+def register_faculty():
+    try:
+        data = request.get_json()
+        if not data:
+            return api_response(success=False, error={"message": "No data received"}, status=400)
+
+        name = data.get('name')
+        email = data.get('email')
+        dept = data.get('dept')
+        password = data.get('password')
+
+        if not name or not email or not password:
+            return api_response(success=False, error={"message": "Missing required fields"}, status=400)
+
+        cursor.execute("SELECT * FROM FACULTY WHERE Email = %s", (email,))
+        if cursor.fetchone():
+            return api_response(success=False, error={"message": "Faculty already registered"}, status=400)
+
+        hashed_password = generate_password_hash(password)
+
+        query = "INSERT INTO FACULTY (Name, Dept, Email, Password) VALUES (%s, %s, %s, %s)"
+        cursor.execute(query, (name, dept, email, hashed_password))
+        db.commit()
+
+        return api_response(success=True, message="Faculty registered successfully", status=201)
+
+    except Exception as e:
+        db.rollback()
+        return api_response(success=False, error={"message": str(e)}, status=500)
+
+
+@app.route('/login-faculty', methods=['POST'])
+def login_faculty():
+    try:
+        data = request.get_json()
+        if not data:
+            return api_response(success=False, error={"message": "No data received"}, status=400)
+
+        email = data.get('email')
+        password = data.get('password')
+
+        if not email or not password:
+            return api_response(success=False, error={"message": "Email and password are required"}, status=400)
+
+        cursor.execute("SELECT * FROM FACULTY WHERE Email = %s", (email,))
+        faculty = cursor.fetchone()
+
+        if not faculty:
+            # Fallback to global admin password logic for legacy purposes if requested
+            admin_password = os.getenv('ADMIN_PASSWORD')
+            if email == 'admin' and password == admin_password:
+                token = create_token('admin')
+                return api_response(success=True, data={"token": token, "faculty": {"Name": "Global Admin", "Email": "admin"}}, message="Login successful")
+            return api_response(success=False, error={"message": "Faculty not found"}, status=404)
+
+        stored_password = faculty.get('Password')
+        if stored_password:
+            if not check_password_hash(stored_password, password):
+                return api_response(success=False, error={"message": "Invalid password"}, status=401)
+        else:
+            if password != 'password':
+                return api_response(success=False, error={"message": "Legacy account: use 'password' to login"}, status=401)
+
+        faculty.pop('Password', None)
+        token = create_token('admin')
+
+        return api_response(success=True, data={"token": token, "faculty": faculty}, message="Login successful")
 
     except Exception as e:
         return api_response(success=False, error={"message": str(e)}, status=500)
