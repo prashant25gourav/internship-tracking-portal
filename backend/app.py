@@ -922,6 +922,7 @@ def upload_report():
         # Get form data
         student_id = request.form.get('student_id')
         faculty_id = request.form.get('faculty_id')
+        title = request.form.get('title', 'Internship Report')
         if not faculty_id:
             faculty_id = None
 
@@ -968,14 +969,15 @@ def upload_report():
         # Insert into REPORT table
         query = """
         INSERT INTO REPORT
-        (Student_ID, Faculty_ID, File_Path, Submission_Date)
+        (Student_ID, Faculty_ID, Topic, File_Path, Submission_Date)
 
-        VALUES (%s, %s, %s, CURDATE())
+        VALUES (%s, %s, %s, %s, CURDATE())
         """
 
         values = (
             student_id,
             faculty_id,
+            title,
             rel_path
         )
 
@@ -1026,4 +1028,4 @@ def upload_report():
 if __name__ == '__main__':
     # Respect FLASK_DEBUG env var for demo/CI. Accept common truthy strings.
     debug = os.getenv('FLASK_DEBUG', 'False').lower() in ('1', 'true', 'yes')
-    app.run(debug=debug)
+    app.run(debug=debug, threaded=False)
