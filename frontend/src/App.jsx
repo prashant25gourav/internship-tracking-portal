@@ -17,7 +17,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/student" element={<StudentDashboard />} />
-        <Route path="/browse-jobs" element={<BrowseJobs />} /> 
+        <Route path="/browse-jobs" element={<BrowseJobs />} />
         <Route path="/upload-report" element={<UploadReport />} />
         <Route path="/admin" element={<AdminDashboard />} />
         {/* New faculty routing layouts */}
