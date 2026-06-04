@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+const BASE = import.meta.env.VITE_API_BASE || "https://internship-backend-xqwb.onrender.com";
 
 function handleResp(res) {
   return res.json().then((json) => {
