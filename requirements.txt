@@ -5,3 +5,4 @@ python-dotenv
 PyJWT>=2.8.0
 pymongo>=4.3.0
 Werkzeug
+gunicorn
