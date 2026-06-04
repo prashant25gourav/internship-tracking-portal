@@ -118,3 +118,26 @@ VALUES
 (11, 1, 'uploads/fullstack_project_aditya.pdf', '2026-05-24'),
 (14, 1, 'uploads/react_flask_aarav.pdf', '2026-05-25');
 
+-- =========================================================
+-- SAMPLE UPDATE & DELETE QUERIES (EXAMPLES)
+-- =========================================================
+
+-- 1. Update student's CGPA or details
+-- UPDATE STUDENT 
+-- SET CGPA = 9.20, Skills = 'Python, React, Flask, Docker' 
+-- WHERE Student_ID = 1;
+
+-- 2. Update an application status
+-- UPDATE APPLICATION 
+-- SET Status = 'Selected' 
+-- WHERE App_ID = 1;
+
+-- 3. Delete a specific report file entry
+-- DELETE FROM REPORT 
+-- WHERE Report_ID = 6;
+
+-- 4. Delete an application entry
+-- DELETE FROM APPLICATION 
+-- WHERE App_ID = 12;
+
+
