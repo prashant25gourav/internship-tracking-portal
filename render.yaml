@@ -1,0 +1,52 @@
+services:
+  # ------------------------------------
+  # 1. PYTHON BACKEND (Web Service)
+  # ------------------------------------
+  - type: web
+    name: internship-backend
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "cd backend && gunicorn app:app"
+    envVars:
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: AUTH_SECRET
+        sync: false
+      - key: MONGO_URI
+        sync: false
+      - key: MONGO_DB_NAME
+        value: internship_portal
+      - key: MONGO_ACTIVITY_COLLECTION
+        value: activity_logs
+      # Render expects the server to listen on 0.0.0.0
+      - key: HOST
+        value: 0.0.0.0
+
+  # ------------------------------------
+  # 2. REACT FRONTEND (Static Site)
+  # ------------------------------------
+  - type: web
+    name: internship-frontend
+    env: static
+    buildCommand: "cd frontend && npm install && npm run build"
+    staticPublishPath: "./frontend/dist"
+    envVars:
+      # This tells Vite where to find the backend API. 
+      # You will need to update this with your actual backend URL later.
+      - key: VITE_API_URL
+        value: "update_me_after_backend_deploys"
+    routes:
+      # Catch-all route to support React Router SPA routing
+      - type: rewrite
+        source: /*
+        destination: /index.html
