@@ -5,6 +5,7 @@ services:
   - type: web
     name: internship-backend
     env: python
+    plan: free
     buildCommand: "pip install -r requirements.txt"
     startCommand: "cd backend && gunicorn app:app"
     envVars:
