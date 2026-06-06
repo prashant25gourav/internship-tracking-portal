@@ -2,6 +2,9 @@ services:
   # ------------------------------------
   # 1. PYTHON BACKEND (Web Service)
   # ------------------------------------
+  # This service runs the Flask backend. Build installs Python
+  # dependencies from `requirements.txt`. The start command runs
+  # Gunicorn inside the `backend` directory to serve `app:app`.
   - type: web
     name: internship-backend
     env: python
@@ -36,13 +39,16 @@ services:
   # ------------------------------------
   # 2. REACT FRONTEND (Static Site)
   # ------------------------------------
+  # This service builds and publishes the Vite/React frontend as
+  # a static site. The `VITE_API_URL` env var is used at build-time
+  # to configure the frontend API base URL.
   - type: web
     name: internship-frontend
     env: static
     buildCommand: "cd frontend && npm install && npm run build"
     staticPublishPath: "./frontend/dist"
     envVars:
-      # This tells Vite where to find the backend API. 
+      # This tells Vite where to find the backend API.
       # You will need to update this with your actual backend URL later.
       - key: VITE_API_URL
         value: "update_me_after_backend_deploys"

@@ -1,3 +1,13 @@
+"""MongoDB helpers for analytics and GridFS file storage.
+
+This module provides a thin wrapper around PyMongo and GridFS so the
+application can log activity events and store/retrieve uploaded files.
+
+When MongoDB is not available the variables `client`, `mongo_db`,
+`activity_collection` and `fs` are set to `None` and calling code
+should handle absence of analytics gracefully.
+"""
+
 from pymongo import MongoClient
 import gridfs
 from datetime import datetime
@@ -11,6 +21,8 @@ MONGO_DB_NAME = os.getenv('MONGO_DB_NAME', 'internship_portal')
 MONGO_ACTIVITY_COLLECTION = os.getenv('MONGO_ACTIVITY_COLLECTION', 'activity_logs')
 
 try:
+    # Initialize client and GridFS instance. A short server selection
+    # timeout avoids long hangs when Mongo is unreachable during startup.
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
     mongo_db = client[MONGO_DB_NAME]
     activity_collection = mongo_db[MONGO_ACTIVITY_COLLECTION]
@@ -18,6 +30,7 @@ try:
     try:
         activity_collection.create_index([('timestamp', -1)])
     except Exception:
+        # indexing is non-critical for functionality; ignore failures
         pass
 except Exception:
     client = None
@@ -25,13 +38,20 @@ except Exception:
     activity_collection = None
     fs = None
 
+
 def save_file_to_mongo(file, filename):
+    """Store a file-like object to GridFS and return the file id string.
+
+    Raises an exception when GridFS is not available.
+    """
     if fs is None:
         raise Exception("MongoDB is not connected.")
     file_id = fs.put(file, filename=filename)
     return str(file_id)
 
+
 def get_file_from_mongo(file_id):
+    """Retrieve a GridFS file by its id (string) and return the GridOut object."""
     if fs is None:
         raise Exception("MongoDB is not connected.")
     from bson.objectid import ObjectId
@@ -47,6 +67,10 @@ def log_activity(
     method,
     extra_data=None
 ):
+    """Insert a structured activity document into the analytics collection.
+
+    Returns the insert result when successful, otherwise returns None.
+    """
     if activity_collection is None:
         return None
 

@@ -239,6 +239,17 @@ All APIs use standardized JSON responses.
 
 ---
 
+## Screenshots
+
+### Login Page
+![Login](docs/diagrams/dashboard.png)
+
+### Student Dashboard
+![Student Dashboard](docs/diagrams/student.png)
+
+### Admin Dashboard
+![Admin Dashboard](docs/diagrams/admin.png)
+
 # 🚀 Backend Setup
 
 ## 1. Clone Repository

@@ -3,6 +3,15 @@ import jwt
 from functools import wraps
 from datetime import datetime, timedelta
 from flask import request, jsonify
+"""Authentication helpers: JWT creation and decorators.
+
+This module centralizes lightweight JWT creation and request
+decorators used by the Flask app during development and demos.
+
+Security note: `AUTH_SECRET` should be provided via environment
+variables in deployment (not committed into source control).
+"""
+
 from dotenv import load_dotenv
 
 # Load environment variables from a .env file (if present). This keeps

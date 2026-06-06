@@ -1,4 +1,9 @@
-const BASE = import.meta.env.VITE_API_BASE || "https://internship-backend-xqwb.onrender.com";
+// Use VITE_API_URL as the canonical env var (render.yaml sets this).
+// Fallback to VITE_API_BASE for compatibility and then to a safe default.
+const BASE =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE ||
+  "https://internship-backend-xqwb.onrender.com";
 
 function handleResp(res) {
   return res.json().then((json) => {

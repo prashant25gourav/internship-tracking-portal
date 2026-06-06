@@ -1,8 +1,8 @@
 Flask
 flask-cors
+gunicorn
 mysql-connector-python
-python-dotenv
 PyJWT>=2.8.0
 pymongo>=4.3.0
+python-dotenv
 Werkzeug
-gunicorn
