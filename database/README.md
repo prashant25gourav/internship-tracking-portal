@@ -15,10 +15,10 @@ MySQL Workbench provides a visual interface to view tables, run SQL queries, and
 3. In the "Setup New Connection" window, configure the following:
    - **Connection Name:** `Railway Internship Portal` *(or any name you prefer)*
    - **Connection Method:** `Standard (TCP/IP)`
-   - **Hostname:** `yamanote.proxy.rlwy.net`
+   - **Hostname:** `(hostname)`
    - **Port:** `53513`
    - **Username:** `root`
-4. Click on the **Store in Vault...** button next to Password and enter your password: **`dEHVJngUAxkOSZxWMtFqTqcostWhRXKm`**
+4. Click on the **Store in Vault...** button next to Password and enter your password: **`DBPassword`**
    - *(Note: This is the `DB_PASSWORD` from your `.env` file)*
 5. *(Optional)* Set **Default Schema:** `railway`
 
@@ -34,7 +34,7 @@ MySQL Workbench provides a visual interface to view tables, run SQL queries, and
 If you have MySQL installed locally and prefer the terminal, you can connect directly using the following command:
 
 ```bash
-mysql -h yamanote.proxy.rlwy.net -P 53513 -u root -pdEHVJngUAxkOSZxWMtFqTqcostWhRXKm railway
+mysql -h hostname -P 53513 -u root -p(password) railway
 ```
 
 *Note: There is no space between `-p` and your password.*
@@ -75,7 +75,7 @@ The easiest way to view and manage this data is by using **[MongoDB Compass](htt
 1. Download and open **MongoDB Compass**.
 2. On the welcome screen, you will see a text box asking for a connection string (URI).
 3. Copy your exact `MONGO_URI` string from your `.env` file. It will look like this:
-   `mongodb+srv://sharmamohan2457:TeamHello@cluster0.drmbt1j.mongodb.net/?appName=Cluster0`
+   `mongodb+srv://{username}:{Password}@{dbname}.drmbt1j.mongodb.net/?appName={dbname}`
 4. Paste that string directly into the text box in MongoDB Compass.
 5. Click the **Connect** button.
 
