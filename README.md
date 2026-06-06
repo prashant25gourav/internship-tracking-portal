@@ -1,45 +1,106 @@
 # Internship Tracking Portal
 
-## 📌 Overview
+## Screenshots
 
-A web-based system to manage and track student internships.
-Students can apply, track status, and upload reports. Faculty can monitor and manage internship activities.
+### Login Page
+![Login](docs/diagrams/dashboard.png)
 
----
+### Student Dashboard
+![Student Dashboard](docs/diagrams/student.png)
 
-## 🛠 Tech Stack
+### Admin Dashboard
+![Admin Dashboard](docs/diagrams/admin.png)
 
-- Frontend: React
-- Backend: Flask (Python)
-- Database: MySQL (structured), MongoDB (documents)
 
----
+## Live Demo
 
-## 🚀 Features
+Frontend:
+https://internship-frontend-3qid.onrender.com
 
-- Student registration and login
-- View and apply for internships
-- Track application status
-- Upload internship reports
-- Faculty dashboard for monitoring
-- Basic recommendation system
+Backend API:
+https://internship-backend-5ymz.onrender.com
 
----
+## Project Overview
 
-## 📂 Project Structure
+The Internship Tracking Portal provides a centralized platform for managing internship activities within an academic institution. It integrates student records, internship opportunities, application tracking, report management, and faculty verification workflows into a single system.
 
-- `/frontend` → React UI
-- `/backend` → Flask API
-- `/database` → SQL scripts
-- `/docs` → PPT, diagrams, report
+## Key Features
 
----
+### Student Module
 
-## 👥 Team Members
+* Student Registration & Login
+* Browse Internship Opportunities
+* Apply for Internships
+* Track Application Status
+* Upload Internship Reports
 
-- Prashant Gourav
-- Mohan Murari Sharma
-- Bhavika Chandar
-- Shivangi Tiwari
+### Faculty/Admin Module
 
----
+* Secure Admin Authentication
+* Application Verification
+* Approve / Reject Internship Applications
+* Review Student Reports
+* Analytics Dashboard
+* Activity Monitoring
+
+### Database Features
+
+* Relational data management using MySQL
+* Activity logging using MongoDB
+* Database View: `student_application_view`
+* Trigger: `prevent_invalid_cgpa`
+* Foreign Key & Integrity Constraints
+
+## Tech Stack
+
+### Frontend
+
+* React.js
+* Vite
+* Tailwind CSS
+
+### Backend
+
+* Python
+* Flask
+* REST APIs
+
+### Database
+
+* MySQL (Railway)
+* MongoDB Atlas
+
+### Deployment
+
+* Render (Frontend & Backend)
+* Railway (MySQL)
+* MongoDB Atlas (Cloud Database)
+
+## Project Structure
+
+```text
+backend/      Flask APIs and business logic
+frontend/     React frontend application
+database/     SQL schema, sample data and scripts
+docs/         Report, presentation and diagrams
+```
+
+## Documentation
+
+Project deliverables are available in the `docs` directory:
+
+* Project Report
+* Presentation (PPT)
+* Database Diagrams
+* Project Poster
+
+## Team Members
+
+* Prashant Gourav
+* Mohan Murari Sharma
+* Bhavika Chandar
+* Shivangi Tiwari
+
+## Academic Project
+
+This project was developed as part of a Database Management Systems (DBMS) academic project and demonstrates the integration of frontend development, backend services, relational databases, cloud databases, and deployment platforms.
