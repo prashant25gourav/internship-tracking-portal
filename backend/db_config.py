@@ -19,15 +19,17 @@ load_dotenv()
 def _connect():
     """Create and return a new MySQL connection.
 
-    Reads credentials from environment variables. When DB_HOST looks
-    like a Railway hostname (contains 'railway') SSL is NOT explicitly
-    disabled so the driver can negotiate a secure connection.
+    Reads credentials from environment variables. When connecting to
+    remote/cloud MySQL (like Railway), enables SSL and forces the
+    pure-Python connector implementation to avoid C-extension SSL
+    handshake crashes.
     """
     host = os.getenv("DB_HOST")
     user = os.getenv("DB_USER")
     password = os.getenv("DB_PASSWORD")
     database = os.getenv("DB_NAME")
-    port = int(os.getenv("DB_PORT", 3306))
+    raw_port = os.getenv("DB_PORT")
+    port = int(raw_port.strip()) if raw_port and raw_port.strip().isdigit() else 3306
 
     kwargs = dict(
         host=host,
@@ -35,13 +37,17 @@ def _connect():
         password=password,
         database=database,
         port=port,
+        connection_timeout=10,
+        use_pure=True,
     )
 
-    # Railway (and many cloud MySQL providers) require SSL.
-    # mysql-connector-python respects ssl_disabled; setting it to False
-    # lets the driver negotiate TLS when the server supports it.
-    if host and "railway" in host.lower():
+    # For remote databases (including Railway, AWS, etc.), negotiate SSL without
+    # strict certificate chain verification (cloud proxies often lack trusted CAs).
+    is_remote = host and host.strip() not in ("localhost", "127.0.0.1")
+    if is_remote:
         kwargs["ssl_disabled"] = False
+        kwargs["ssl_verify_cert"] = False
+        kwargs["ssl_verify_identity"] = False
 
     return mysql.connector.connect(**kwargs)
 
@@ -50,8 +56,19 @@ def get_db():
     """Return the current module-level connection, reconnecting if needed."""
     global db, cursor
     try:
-        if db is None or not db.is_connected():
+        need_reconnect = False
+        if db is None:
+            need_reconnect = True
+        else:
+            try:
+                db.ping(reconnect=False)
+            except Exception:
+                need_reconnect = True
+
+        if need_reconnect:
             db = _connect()
+            cursor = db.cursor(dictionary=True, buffered=True)
+        elif cursor is None and db is not None:
             cursor = db.cursor(dictionary=True, buffered=True)
     except Exception:
         # Re-raise so callers know the DB is unavailable
@@ -61,7 +78,10 @@ def get_db():
 
 def get_cursor():
     """Return a cursor on a live connection."""
+    global db, cursor
     get_db()
+    if cursor is None and db is not None:
+        cursor = db.cursor(dictionary=True, buffered=True)
     return cursor
 
 
@@ -78,4 +98,4 @@ try:
 except Exception as e:
     print(f"[db_config] Initial MySQL connection failed: {e}")
     db = None
-    cursor = None
+    cursor = None

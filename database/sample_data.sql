@@ -3,7 +3,7 @@
 -- STUDENTS
 -- =========================================================
 
-INSERT INTO STUDENT (Name, Dept, Email, Phone, Skills, CGPA)final 
+INSERT INTO STUDENT (Name, Dept, Email, Phone, Skills, CGPA)
 VALUES
 ('Rahul Sharma', 'CSE', 'rahul.sharma@gmail.com', '9876543210', 'Python, React, Flask', 8.50),
 ('Ananya Singh', 'ISE', 'ananya.singh@gmail.com', '9876543211', 'Java, SQL, Spring Boot', 8.90),

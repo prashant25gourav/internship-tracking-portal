@@ -35,6 +35,8 @@ services:
       # Render expects the server to listen on 0.0.0.0
       - key: HOST
         value: 0.0.0.0
+      - key: PYTHON_VERSION
+        value: 3.11.9
 
   # ------------------------------------
   # 2. REACT FRONTEND (Static Site)
