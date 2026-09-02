@@ -10,7 +10,7 @@ services:
     env: python
     plan: free
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "cd backend && gunicorn app:app"
+    startCommand: "cd backend && gunicorn app:app --bind 0.0.0.0:$PORT"
     envVars:
       - key: DB_HOST
         sync: false
@@ -51,7 +51,7 @@ services:
       # This tells Vite where to find the backend API.
       # You will need to update this with your actual backend URL later.
       - key: VITE_API_URL
-        value: "update_me_after_backend_deploys"
+        value: "https://internship-backend-5ymz.onrender.com"
     routes:
       # Catch-all route to support React Router SPA routing
       - type: rewrite

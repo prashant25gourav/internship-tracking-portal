@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, send_from_directory, send_file
-from db_config import cursor, db
+from db_config import cursor, db, get_db, get_cursor
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -12,6 +12,26 @@ from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
+
+
+@app.before_request
+def _ensure_db():
+    """Reconnect MySQL if the connection was lost (e.g. Railway idle timeout).
+
+    Updates the module-level `db` and `cursor` in db_config so every
+    route handler that imported them at the top sees the refreshed
+    references via the module namespace.
+    """
+    global db, cursor
+    import db_config
+    try:
+        db_config.get_db()
+    except Exception:
+        pass  # individual routes will surface the error
+    # Refresh local module references so route handlers that use
+    # the top-level `cursor` / `db` names see the reconnected objects.
+    db = db_config.db
+    cursor = db_config.cursor
 
 def allowed_file(filename):
 

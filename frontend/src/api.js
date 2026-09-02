@@ -3,7 +3,7 @@
 const BASE =
   import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_API_BASE ||
-  "https://internship-backend-xqwb.onrender.com";
+  "https://internship-backend-5ymz.onrender.com";
 
 function handleResp(res) {
   return res.json().then((json) => {
