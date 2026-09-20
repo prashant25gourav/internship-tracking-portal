@@ -67,8 +67,8 @@ A full-stack enterprise web application for managing internship opportunities, s
 * **`COMPANY`**: Corporate partner records with unique HR contact emails.
 * **`FACULTY`**: Academic department coordinators and administrators.
 * **`INTERNSHIP`**: Corporate job postings linked by `Company_ID` foreign key.
-* **`APPLICATION`**: Bridge entity linking students to internships with composite unique checks.
-* **`DOCUMENT`**: Report upload metadata referencing MongoDB GridFS chunk identifiers.
+* **`APPLICATION`**: Bridge entity linking students to internships with foreign key constraints and status domain checks.
+* **`REPORT`**: Internship completion report metadata linking students and faculty coordinators.
 
 ### Database View: `student_application_view`
 Encapsulates a 4-table relational join (`APPLICATION`, `STUDENT`, `INTERNSHIP`, `COMPANY`) into a single virtual table for real-time reporting and administrative dashboards.
