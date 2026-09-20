@@ -47,6 +47,19 @@ A full-stack enterprise web application for managing internship opportunities, s
 
 ---
 
+## 📸 Screenshots
+
+### Login Page
+![Login](docs/diagrams/dashboard.png)
+
+### Student Dashboard
+![Student Dashboard](docs/diagrams/student.png)
+
+### Admin Dashboard
+![Admin Dashboard](docs/diagrams/admin.png)
+
+---
+
 ## 🗄️ Database Architecture & Integrity
 
 ### Relational Schema (MySQL)
@@ -148,8 +161,7 @@ internship-tracking-portal/
 │   └── mongo_config.py         # MongoDB Atlas client & GridFS file handlers
 │
 ├── frontend/                   # React + Vite Frontend
-│   ├── public/
-│   │   └── staticwebapp.config.json # SPA client routing configuration
+│   ├── public/                 # Static assets (favicon, SVG icons)
 │   ├── src/                    # UI Components, Views, and API clients
 │   │   ├── api.js              # Centralized Fetch wrapper with JWT headers
 │   │   └── pages/              # Student, Admin, and Authentication views
