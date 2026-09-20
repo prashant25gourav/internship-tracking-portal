@@ -28,7 +28,7 @@ wheels/
 .installed.cfg
 *.egg
 
-# Frontend (handled separately by Azure Static Web Apps)
+# Frontend (built via dedicated frontend/Dockerfile)
 frontend/
 node_modules/
 
@@ -36,7 +36,6 @@ node_modules/
 database/
 docs/
 *.md
-render.yaml
 
 # OS files & temp logs
 .DS_Store

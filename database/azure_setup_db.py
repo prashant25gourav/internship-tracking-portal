@@ -90,7 +90,7 @@ def verify_database(cursor):
     print("\n" + "=" * 50)
     print("[*] Verifying Database Schema and Tables:")
     print("=" * 50)
-    tables = ["STUDENT", "COMPANY", "FACULTY", "INTERNSHIP", "APPLICATION", "DOCUMENT"]
+    tables = ["STUDENT", "COMPANY", "FACULTY", "INTERNSHIP", "APPLICATION", "REPORT"]
     for table in tables:
         try:
             cursor.execute(f"SELECT COUNT(*) FROM {table}")
