@@ -88,6 +88,34 @@ def home():
     return api_response(success=True, message="Backend running", data={"status": "running"})
 
 
+@app.route('/health')
+def health():
+    import db_config
+    db_status = "connected"
+    db_error = None
+    try:
+        db_config.get_db()
+        c = db_config.get_cursor()
+        c.execute("SELECT 1")
+    except Exception as e:
+        db_status = "error"
+        db_error = str(e)
+
+    return api_response(
+        success=(db_status == "connected"),
+        data={
+            "status": "healthy",
+            "db_status": db_status,
+            "db_host": os.getenv("DB_HOST", "NOT_SET"),
+            "db_user": os.getenv("DB_USER", "NOT_SET"),
+            "db_name": os.getenv("DB_NAME", "NOT_SET"),
+            "db_port": os.getenv("DB_PORT", "NOT_SET"),
+            "has_db_password": bool(os.getenv("DB_PASSWORD")),
+            "db_error": db_error,
+        }
+    )
+
+
 # API to fetch internships
 @app.route('/internships')
 def get_internships():
