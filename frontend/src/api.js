@@ -1,9 +1,9 @@
-// Use VITE_API_URL as the canonical env var (render.yaml sets this).
-// Fallback to VITE_API_BASE for compatibility and then to a safe default.
+// Use VITE_API_URL as the canonical env var.
+// Fallback to VITE_API_BASE for compatibility and then to active Azure backend.
 const BASE =
   import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_API_BASE ||
-  "https://internship-backend-5ymz.onrender.com";
+  "https://internship-backend.lemongrass-caaf84c0.uaenorth.azurecontainerapps.io";
 
 function handleResp(res) {
   return res.json().then((json) => {

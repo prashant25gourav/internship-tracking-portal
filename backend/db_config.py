@@ -20,7 +20,7 @@ def _connect():
     """Create and return a new MySQL connection.
 
     Reads credentials from environment variables. When connecting to
-    remote/cloud MySQL (like Railway), enables SSL and forces the
+    remote/cloud MySQL (like Azure Database for MySQL), enables SSL and forces the
     pure-Python connector implementation to avoid C-extension SSL
     handshake crashes.
     """
@@ -41,7 +41,7 @@ def _connect():
         use_pure=True,
     )
 
-    # For remote databases (including Railway, AWS, etc.), negotiate SSL without
+    # For remote databases (including Azure, AWS, etc.), negotiate SSL without
     # strict certificate chain verification (cloud proxies often lack trusted CAs).
     is_remote = host and host.strip() not in ("localhost", "127.0.0.1")
     if is_remote:

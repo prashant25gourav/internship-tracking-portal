@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_from_directory, send_file
+from flask import Flask, jsonify, request, send_file
 from db_config import cursor, db, get_db, get_cursor
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -6,7 +6,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from mongo_config import log_activity, get_recent_activities, get_activity_count, save_file_to_mongo, get_file_from_mongo
 from auth import create_token, admin_required
 import os
-import io
 from werkzeug.exceptions import RequestEntityTooLarge
 from datetime import datetime
 
@@ -16,7 +15,7 @@ CORS(app)
 
 @app.before_request
 def _ensure_db():
-    """Reconnect MySQL if the connection was lost (e.g. Railway idle timeout).
+    """Reconnect MySQL if the connection was lost (e.g. cloud database idle timeout).
 
     Updates the module-level `db` and `cursor` in db_config so every
     route handler that imported them at the top sees the refreshed
